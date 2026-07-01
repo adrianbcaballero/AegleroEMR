@@ -12,5 +12,18 @@
     "Substance Use Disorder records, 42 CFR Part 2"
   ],
   "hosting": "Amazon Web Services (ECS Fargate, RDS Multi-AZ, CloudFront, S3, KMS, Secrets Manager, Route 53)",
+  "categorization": "FIPS 199 provisional: Confidentiality = High, Integrity = Moderate, Availability = Moderate (driven by PHI and 42 CFR Part 2 substance use disorder records). Overall impact: High.",
+  "system_type": "Major application - multi-tenant SaaS electronic medical record",
+  "operational_status": "Operational (demonstration deployment)",
+  "authorizing_official": "Not applicable - demonstration system; the system owner acts as the approving authority",
+  "security_contact": "security@aeglero.com",
+  "point_of_contact": "Aeglero Security (security@aeglero.com)",
+  "applicable_laws": [
+    "HIPAA Security Rule (45 CFR Part 164)",
+    "42 CFR Part 2 (Confidentiality of Substance Use Disorder Patient Records)",
+    "NIST SP 800-171 Rev 2 (assessment framework applied in this plan)",
+    "ONC Health IT Certification criteria (45 CFR 170.315)",
+    "CMMC Level 2 (crosswalk reference)"
+  ],
   "assessment_scope_note": "Aeglero is a HIPAA-scoped healthcare system; its real regulatory obligation is HIPAA + 42 CFR Part 2. This document maps Aeglero's existing controls to NIST SP 800-171 Rev 2 to DEMONSTRATE continuous-compliance automation. Aeglero is not a federal CUI system and this is not an official assessment artifact."
 }
