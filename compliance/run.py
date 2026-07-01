@@ -90,22 +90,68 @@ def run_collectors(now_iso: str) -> list:
     return [by_control[cid] for cid in order]
 
 
+def _disposition_finding(ctrl: dict, now_iso: str) -> dict:
+    """Synthesize a finding for a control with no collector, from its catalog type.
+
+    - inherited: satisfied by the provider (AWS) -> no collector needed
+    - manual:    satisfied by an org policy/procedure document
+    - na:        not applicable, with rationale
+    - automated: technical control that SHOULD have a collector; if none yet ->
+                 not-collected (an honest POA&M item)
+    """
+    ctype = ctrl.get("type", "automated")
+    rationale = ctrl.get("rationale", "")
+    ref = ctrl.get("evidence_ref")
+    if ctype == "inherited":
+        status, method = "inherited", "INHERITED"
+        summary = rationale or ("Inherited from the cloud service provider (AWS); "
+                                "evidenced by provider attestations (SOC 2 / FedRAMP).")
+    elif ctype == "attested":
+        status, method = "attested", "ATTESTED"
+        summary = rationale or ("Implemented in the application; an automated collector "
+                                "for this control is a roadmap item.")
+    elif ctype in ("policy", "manual"):
+        status, method = "policy", "POLICY"
+        summary = rationale or "Satisfied by organizational policy/procedure (see docs/policies/)."
+    elif ctype == "na":
+        status, method = "na", "N/A"
+        summary = rationale or "Not applicable to this system."
+    else:  # automated with no collector yet
+        status, method = "not-collected", None
+        summary = "No automated evidence collected yet; a collector is pending (POA&M)."
+    evidence = [{"kind": "reference", "ref": ref, "detail": summary}] if ref else []
+    return {
+        "control_id": ctrl["id"], "status": status, "method": method,
+        "summary": summary, "evidence": evidence, "objective_ids": [],
+        "collector": "catalog", "collected_at": now_iso, "evidence_hash": "",
+    }
+
+
 def build_report(catalog: dict, findings: list, now_iso: str) -> dict:
-    findings_by_control = {f.control_id: f.to_dict() for f in findings}
+    real = {f.control_id: f.to_dict() for f in findings}
+
+    # Every control gets a finding: the real collector one, or a synthesized
+    # disposition based on the catalog's `type`.
+    findings_by_control = {}
+    for ctrl in catalog.get("controls", []):
+        cid = ctrl["id"]
+        findings_by_control[cid] = real.get(cid) or _disposition_finding(ctrl, now_iso)
+
     summary = scorer.score(catalog, findings_by_control)
 
-    # Per-control view merging catalog metadata with the finding (or "not-collected").
     controls_view = []
     for ctrl in catalog.get("controls", []):
         cid = ctrl["id"]
-        finding = findings_by_control.get(cid)
+        finding = findings_by_control[cid]
         controls_view.append({
             "id": cid,
             "family": ctrl.get("family"),
             "family_name": ctrl.get("family_name"),
             "title": ctrl.get("title"),
             "sprs_weight": ctrl.get("sprs_weight"),
-            "status": finding["status"] if finding else "not-collected",
+            "type": ctrl.get("type", "automated"),
+            "mappings": ctrl.get("mappings", {}),
+            "status": finding["status"],
             "finding": finding,
         })
 

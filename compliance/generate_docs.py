@@ -34,8 +34,8 @@ POAM_CSV_PATH = OUTPUT_DIR / "POAM.csv"
 DASHBOARD_DIR = HERE / "dashboard"
 DASHBOARD_DATA_PATH = DASHBOARD_DIR / "data.js"
 
-# Statuses that belong in the SSP (implemented) vs the POA&M (open items).
-SSP_STATUSES = {"met", "partial", "inherited", "na"}
+# Statuses that belong in the SSP (satisfied) vs the POA&M (open items).
+SSP_STATUSES = {"met", "partial", "inherited", "na", "manual", "attested", "policy"}
 POAM_STATUSES = {"not-met", "partial", "not-collected", "error"}
 
 # Days-to-remediate by severity, used to set milestone dates.
@@ -50,6 +50,9 @@ STATUS_LABEL = {
     "met": "Implemented",
     "partial": "Partially implemented",
     "inherited": "Inherited (provider)",
+    "attested": "Attested (implemented, automation pending)",
+    "policy": "Satisfied by policy",
+    "manual": "Satisfied by policy",
     "na": "Not applicable",
     "not-met": "Not implemented",
     "not-collected": "Not yet assessed",

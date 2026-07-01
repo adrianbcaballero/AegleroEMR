@@ -29,11 +29,17 @@ STATUS_NOT_MET = "not-met"         # control assessed and NOT satisfied
 STATUS_PARTIAL = "partial"         # partially satisfied
 STATUS_NA = "na"                   # not applicable (with rationale)
 STATUS_INHERITED = "inherited"     # satisfied by an external provider (e.g. AWS)
+STATUS_ATTESTED = "attested"       # implemented in the app; collector pending (attested)
+STATUS_POLICY = "policy"           # satisfied by an org policy/procedure document
+STATUS_MANUAL = "manual"           # legacy alias (kept for back-compat)
+STATUS_NOT_COLLECTED = "not-collected"  # automated control with no collector yet
 STATUS_ERROR = "error"             # collector could not gather evidence
 
-# Statuses that mean "assessed and passing" (retain SPRS points)
-PASSING = {STATUS_MET, STATUS_NA, STATUS_INHERITED}
-# Statuses excluded from the applicable-controls denominator
+# Statuses that mean "satisfied" (retain SPRS points).
+PASSING = {STATUS_MET, STATUS_NA, STATUS_INHERITED, STATUS_MANUAL,
+           STATUS_ATTESTED, STATUS_POLICY}
+# Statuses excluded from the "applicable controls" denominator (N/A doesn't apply;
+# inherited is provided by someone else). Manual IS applicable (you satisfy it).
 EXCLUDED = {STATUS_NA, STATUS_INHERITED}
 
 # ---- NIST 800-171A assessment methods ---------------------------------------
