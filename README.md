@@ -27,6 +27,8 @@
   <img src="https://img.shields.io/badge/aws-deployed-orange.svg" alt="AWS">
   <img src="https://img.shields.io/badge/HIPAA-aligned-blueviolet.svg" alt="HIPAA">
   <img src="https://img.shields.io/badge/42_CFR_Part_2-supported-blueviolet.svg" alt="42 CFR Part 2">
+  <img src="https://img.shields.io/badge/NIST_800--171-mapped-blueviolet.svg" alt="NIST 800-171">
+  <img src="https://img.shields.io/badge/CMMC_L2-crosswalked-blueviolet.svg" alt="CMMC Level 2">
 </p>
 
 ---
