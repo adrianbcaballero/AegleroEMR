@@ -18,7 +18,7 @@ self-contained; this file points to where each requirement comes from.
 The 110 security requirements. The scored spine of this engine.
 - Publication: https://csrc.nist.gov/pubs/sp/800/171/r2/upd1/final
 - Machine-readable (OSCAL) catalog: https://github.com/usnistgov/oscal-content
-- Note: CMMC currently uses **Rev 2** (not Rev 3), so we track Rev 2.
+- Note: CMMC currently uses **Rev 2**.
 
 ### NIST SP 800-171A — Assessment Objectives
 The `[a]`,`[b]`,`[c]` determination statements graded during an assessment.
