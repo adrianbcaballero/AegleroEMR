@@ -1,0 +1,76 @@
+name: Deploy Compliance Dashboard
+
+# Weekly: re-run the assessment and the advisory AI evidence review, then publish
+# the refreshed dashboard to the live compliance site (S3 + CloudFront), so
+# compliance.<domain> updates itself without a manual step.
+#
+# DORMANT until the AWS stack is deployed and these repo settings exist:
+#   - variable  AWS_COMPLIANCE_DEPLOY_ROLE_ARN  (terraform output: compliance_deploy_role_arn)
+#   - variable  COMPLIANCE_DISTRIBUTION_ID      (terraform output: compliance_distribution_id)
+#   - secret    ANTHROPIC_API_KEY               (for the AI review; without it that step is skipped)
+# With the role-ARN variable unset, the job below is skipped entirely (green no-op).
+on:
+  schedule:
+    - cron: "23 8 * * 1"          # Mondays at 08:23 UTC
+  workflow_dispatch:              # allow manual runs
+
+permissions:
+  id-token: write                 # OIDC federation to assume the deploy role
+  contents: read
+
+concurrency:
+  group: dashboard-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Assess, AI-review, publish dashboard
+    runs-on: ubuntu-latest
+    # Dormant guard: do nothing until the deploy role ARN variable is configured.
+    if: ${{ vars.AWS_COMPLIANCE_DEPLOY_ROLE_ARN != '' }}
+    env:
+      BUCKET: aeglero-emr-compliance-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # boto3 is unused here (no live AWS collector in this job); anthropic powers
+      # the AI review. Installing both keeps the step simple and matches the engine.
+      - name: Install optional dependencies
+        run: pip install -r compliance/requirements.txt
+
+      # EXAMINE-only assessment (no COMPLIANCE_ENABLE_AWS): regenerates data.js.
+      - name: Run compliance engine
+        run: python compliance/run.py
+
+      # Regenerates ai_review.js. If ANTHROPIC_API_KEY is unset the script exits
+      # cleanly without an API call, leaving the committed snapshot in place.
+      - name: Run AI evidence review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python compliance/ai_review.py
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_COMPLIANCE_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      # Mirror the dashboard folder to the bucket. --delete removes stale objects;
+      # source files (.py, __pycache__) are excluded so only the static site ships.
+      - name: Publish dashboard to S3
+        run: |
+          aws s3 sync compliance/dashboard/ "s3://${BUCKET}/" \
+            --delete \
+            --exclude "*.py" \
+            --exclude "__pycache__/*"
+
+      # Bust the CDN cache so viewers see the new assessment immediately.
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.COMPLIANCE_DISTRIBUTION_ID }}" \
+            --paths "/*"
