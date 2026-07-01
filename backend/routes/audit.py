@@ -250,6 +250,19 @@ def verify_audit_chain():
     GET /api/audit/verify
     Walks the full hash chain for this tenant and reports whether any entries
     have been tampered with.  ONC §170.315(d)(2) tamper-detection.
+
+    Detects: modification of any recorded field, re-ordering, and deletion of
+    rows anywhere except the tail (the following row's prev_hash stops matching).
+    A NULL entry_hash is treated as an anomaly, not a legitimate reset: every
+    row written by log_access always carries a hash, so a missing one means the
+    row predates the chain or was tampered with (e.g. an attacker nulling the
+    hash to escape verification). Such rows are reported and mark the chain as
+    not intact.
+
+    Known limitation: deletion of the most recent (tail) rows leaves the
+    surviving chain internally consistent and is not detectable here without an
+    external anchor (persisting the expected last hash / count). Tracked as a
+    remediation item; see the compliance POA&M for 3.3.8.
     """
     ip = client_ip()
 
@@ -262,10 +275,19 @@ def verify_audit_chain():
 
     total = len(rows)
     broken = []
+    unhashed = []
     prev_hash = None
 
     for row in rows:
+        # A NULL entry_hash is never produced in normal operation, so it is an
+        # anomaly rather than a chain reset. Record it, and reset prev_hash so
+        # the next legitimately-hashed row is not falsely flagged as broken.
         if row.entry_hash is None:
+            unhashed.append({
+                "id": row.id,
+                "timestamp": row.timestamp.isoformat(),
+                "action": row.action,
+            })
             prev_hash = None
             continue
 
@@ -286,15 +308,18 @@ def verify_audit_chain():
 
         prev_hash = row.entry_hash
 
-    intact = len(broken) == 0
+    intact = len(broken) == 0 and len(unhashed) == 0
     status_word = "INTACT" if intact else "TAMPERED"
 
     log_access(g.user.id, "AUDIT_VERIFY", "audit/verify", "SUCCESS", ip,
-               description=f"Hash chain verification: {status_word} — {total} entries checked, {len(broken)} broken")
+               description=(f"Hash chain verification: {status_word} — {total} entries checked, "
+                            f"{len(broken)} broken, {len(unhashed)} unhashed"))
 
     return {
         "intact": intact,
         "total_entries": total,
         "broken_entries": len(broken),
-        "details": broken[:50],  # cap to prevent huge responses
+        "unhashed_entries": len(unhashed),
+        "details": broken[:50],       # cap to prevent huge responses
+        "unhashed": unhashed[:50],
     }, 200
