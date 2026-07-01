@@ -39,7 +39,9 @@ OUT_MD = HERE / "output" / "ai_review.md"
 
 MODEL = os.environ.get("COMPLIANCE_AI_MODEL", "claude-opus-4-8")
 MAX_CONTROLS = int(os.environ.get("COMPLIANCE_AI_MAX_CONTROLS", "20"))
-CONTEXT_LINES = 3  # lines of context on each side of a cited line
+CONTEXT_LINES = 12    # fallback context (each side) for non-Python refs or when
+                      # enclosing-block extraction does not apply
+MAX_BLOCK_LINES = 60  # cap on an extracted function/class block, to stay bounded
 ENABLED = ("1", "true", "yes", "on")
 
 # Statuses worth reviewing (they carry real collector evidence).
@@ -110,8 +112,51 @@ def scrub(payload: dict) -> tuple[bool, str]:
 _REF_RE = re.compile(r"^([\w.\-/]+\.\w+):(\d+)$")
 
 
+_DEF_RE = re.compile(r"^(\s*)(?:async def|def|class)\b")
+
+
+def _enclosing_block(lines: list[str], idx: int) -> tuple[int, int] | None:
+    """For a 0-based line index, return (start, end) of the enclosing Python
+    def/class block, or None. Bounded by MAX_BLOCK_LINES. If the cited line is a
+    decorator or blank above a def, the def it belongs to is used."""
+    # If sitting on a decorator or blank line, move down to the def it decorates.
+    scan = idx
+    while scan < len(lines) - 1 and (not lines[scan].strip() or lines[scan].lstrip().startswith("@")):
+        scan += 1
+    def_line = None
+    indent = 0
+    for i in range(scan, -1, -1):
+        m = _DEF_RE.match(lines[i])
+        if m:
+            def_line, indent = i, len(m.group(1))
+            break
+    if def_line is None:
+        return None
+    # Include decorator lines directly above the def.
+    start = def_line
+    d = def_line - 1
+    while d >= 0 and lines[d].lstrip().startswith("@"):
+        start, d = d, d - 1
+    # End at the next non-blank line back at or below the def's indentation.
+    end = len(lines)
+    for j in range(def_line + 1, len(lines)):
+        if not lines[j].strip():
+            continue
+        if len(lines[j]) - len(lines[j].lstrip()) <= indent:
+            end = j
+            break
+    if end - start > MAX_BLOCK_LINES:
+        return None
+    return start, end
+
+
 def excerpt_for_ref(ref: str) -> dict | None:
-    """Return a bounded code excerpt for a 'path:line' ref, or None."""
+    """Return a bounded code excerpt for a 'path:line' ref, or None.
+
+    For Python files this captures the whole enclosing function or class (so a
+    reviewer sees the actual logic, not just the signature); otherwise it falls
+    back to a fixed window. Always bounded, never a whole file.
+    """
     m = _REF_RE.match(ref or "")
     if not m:
         return None
@@ -120,8 +165,16 @@ def excerpt_for_ref(ref: str) -> dict | None:
         lines = (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeDecodeError):
         return None
-    lo = max(0, line - 1 - CONTEXT_LINES)
-    hi = min(len(lines), line + CONTEXT_LINES)
+    n = len(lines)
+    idx = min(max(line - 1, 0), n - 1)
+
+    block = _enclosing_block(lines, idx) if path.endswith(".py") else None
+    if block:
+        lo, hi = block
+    else:
+        lo = max(0, idx - CONTEXT_LINES)
+        hi = min(n, idx + 1 + CONTEXT_LINES)
+
     snippet = "\n".join(f"{i + 1}: {lines[i]}" for i in range(lo, hi))
     return {"ref": ref, "code": snippet}
 
@@ -130,10 +183,15 @@ def build_payload(ctrl: dict) -> dict:
     f = ctrl.get("finding") or {}
     evidence = [{"ref": e.get("ref"), "detail": e.get("detail")} for e in f.get("evidence", [])]
     excerpts = []
+    seen = set()
     for e in f.get("evidence", []):
-        ex = excerpt_for_ref(e.get("ref", ""))
+        ref = e.get("ref", "")
+        if ref in seen:
+            continue
+        ex = excerpt_for_ref(ref)
         if ex:
             excerpts.append(ex)
+            seen.add(ref)
     return {
         "control_id": ctrl["id"],
         "title": ctrl.get("title", ""),
@@ -157,10 +215,12 @@ def review_one(payload: dict, ctrl: dict) -> dict:
     client = anthropic.Anthropic()
     user = ("Review this control's evidence.\n\n"
             + json.dumps(payload, indent=2, ensure_ascii=False))
+    # Note: temperature is intentionally not set. Newer models deprecate it and are
+    # low-variance by default; reproducibility relies on the pinned model id plus the
+    # recorded prompt and evidence hashes.
     msg = client.messages.create(
         model=MODEL,
         max_tokens=1024,
-        temperature=0,
         system=SYSTEM_PROMPT,
         tools=[REVIEW_TOOL],
         tool_choice={"type": "tool", "name": "report_review"},
