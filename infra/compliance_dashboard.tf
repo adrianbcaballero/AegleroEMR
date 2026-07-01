@@ -96,6 +96,16 @@ resource "aws_s3_object" "compliance_logo" {
   content_type = "image/png"
 }
 
+# The AI Review tab's data feed (window.AI_REVIEW). Committed snapshot; the
+# dashboard-deploy workflow re-syncs a fresher copy on each weekly run.
+resource "aws_s3_object" "compliance_ai_review" {
+  bucket       = aws_s3_bucket.compliance_dashboard.id
+  key          = "ai_review.js"
+  source       = "${path.module}/../compliance/dashboard/ai_review.js"
+  etag         = filemd5("${path.module}/../compliance/dashboard/ai_review.js")
+  content_type = "application/javascript"
+}
+
 # ── Origin Access Control ──
 resource "aws_cloudfront_origin_access_control" "compliance_dashboard" {
   name                              = "aeglero-compliance-dashboard"
