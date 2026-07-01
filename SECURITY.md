@@ -24,6 +24,14 @@ Please include:
 
 ---
 
+## Continuous compliance monitoring
+
+Aeglero is assessed continuously against all 110 NIST SP 800-171 Rev 2 controls by a compliance engine in [`compliance/`](compliance/README.md). It computes an SPRS score, auto-generates a System Security Plan and a Plan of Action and Milestones, and crosswalks every control to its HIPAA Security Rule, ONC Health IT, CMMC Level 2, and 42 CFR Part 2 equivalents, so a single piece of evidence maps across frameworks.
+
+Evidence is gathered by collectors that read the application source, the Terraform infrastructure, and the CI configuration, so each automated control status links back to the specific code or config that supports it. The assessment runs on a schedule with drift detection, and an optional collector verifies the live AWS account through a read-only role assumed via GitHub OIDC. The live dashboard is at [compliance.aeglero.com](https://compliance.aeglero.com) (available on request); see [compliance/README.md](compliance/README.md) for the full design.
+
+---
+
 ## Technical controls
 
 This section catalogues the security mechanisms implemented in the application. Each item is anchored to source code where possible so you can verify the implementation rather than just trust the description.
@@ -171,6 +179,10 @@ Physical controls are largely AWS's responsibility under the BAA:
 | **§ 2.31** | Consent — written form requirements | Per-patient `Part2Consent` records with named recipient, expiration date, and disclosure purpose. Created, viewed, and revoked through the UI; every action audit-logged. |
 | **§ 2.51** | Disclosures permitted with consent | Consent records track the recipient and purpose; disclosure events can be cross-referenced against consent records via the audit log. |
 | **§ 2.61** | Disclosures permitted with written consent — revocation | Consent revocations are first-class events: an explicit `revoked_at` timestamp on the consent row plus a `CONSENT_REVOKE` audit log entry. |
+
+### NIST SP 800-171 and CMMC
+
+All 110 NIST SP 800-171 Rev 2 controls are assessed by the continuous compliance engine, with each control crosswalked to its HIPAA, ONC, CMMC Level 2, and 42 CFR Part 2 equivalents and scored against the DoD SPRS methodology. See [Continuous compliance monitoring](#continuous-compliance-monitoring) above and [compliance/README.md](compliance/README.md).
 
 ---
 
