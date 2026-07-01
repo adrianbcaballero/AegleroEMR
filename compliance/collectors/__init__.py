@@ -11,6 +11,7 @@ from .crypto_config import CryptoConfigCollector
 from .aws_live import AwsLiveCollector
 from .self_assessment import SelfAssessmentCollector
 from .identity_hardening import IdentityHardeningCollector
+from .network_config import NetworkConfigCollector
 
 ALL_COLLECTORS = [
     AuditChainCollector(),
@@ -19,6 +20,7 @@ ALL_COLLECTORS = [
     CryptoConfigCollector(),
     SelfAssessmentCollector(),
     IdentityHardeningCollector(),
+    NetworkConfigCollector(),
     # Runs AFTER crypto_config so its live TEST evidence merges into (and can flag
     # drift against) the Terraform EXAMINE evidence. Opt-in via COMPLIANCE_ENABLE_AWS.
     AwsLiveCollector(),

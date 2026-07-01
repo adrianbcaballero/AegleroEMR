@@ -1312,7 +1312,7 @@
       "family_name": "System and Communications Protection",
       "title": "Monitor, control, and protect communications at boundaries.",
       "sprs_weight": 5,
-      "type": "attested",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "SC.L1-3.13.1",
         "hipaa": "164.312(e)(1)",
@@ -1372,7 +1372,7 @@
       "family_name": "System and Communications Protection",
       "title": "Implement subnetworks for publicly accessible components.",
       "sprs_weight": 5,
-      "type": "attested",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "SC.L1-3.13.5",
         "hipaa": null,
@@ -1387,7 +1387,7 @@
       "family_name": "System and Communications Protection",
       "title": "Deny network traffic by default; allow by exception.",
       "sprs_weight": 5,
-      "type": "attested",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "SC.L2-3.13.6",
         "hipaa": null,
