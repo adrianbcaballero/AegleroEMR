@@ -1,0 +1,10 @@
+{
+  "narratives": {
+    "3.3.8": {
+      "statement": "Audit log entries are protected from undetected modification and deletion through a per-tenant cryptographic hash chain implemented in backend/services/audit_logger.py. Each audit record's content fields (timestamp, tenant ID, user ID, action, resource, status, IP address, and description) are concatenated with the previous entry's hash and passed through SHA-256 (_compute_hash(), audit_logger.py:9) to produce that entry's stored hash, linking every entry to its predecessor. Because each hash is derived in part from the prior entry's hash, altering or deleting any earlier row breaks the chain for all subsequent entries, making tampering to the audit trail computationally detectable rather than silently possible.\n\nIntegrity verification is provided via the GET /api/audit/verify endpoint (backend/routes/audit.py:246), which is restricted to users holding the audit.view permission. This endpoint retrieves all audit log rows for the calling tenant in insertion order, recomputes the expected hash for each entry using the same _compute_hash function, and compares it against the stored entry_hash and prev_hash values. Any mismatch is recorded as a \"broken\" entry, and the endpoint returns an overall status of INTACT or TAMPERED along with the count of total and broken entries and details (capped at 50) of any discrepancies found. Each verification run is itself logged as an AUDIT_VERIFY event, recording the outcome, entry counts, and requesting user for accountability.\n\nThis mechanism satisfies objectives 3.3.8[b] and 3.3.8[c] by providing an automated means to detect unauthorized modification (b) and deletion (c) of audit information: any change to an entry's content or removal/reordering of an entry invalidates the hash chain from that point forward, and this condition is surfaced on demand through the /api/audit/verify endpoint restricted to authorized, permissioned personnel.",
+      "approved_at": "2026-07-01T16:53:33+00:00",
+      "source_model": "claude-sonnet-5",
+      "evidence_sha256": "7e1ab282570bf134086265d971dbaf722f5bb6d65617ca09be6f92bee8c7b473"
+    }
+  }
+}
