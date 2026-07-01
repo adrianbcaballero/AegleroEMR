@@ -62,6 +62,9 @@ resource "aws_iam_role" "compliance_readonly" {
 # Least-privilege: only the read APIs the live collectors call. No write actions,
 # no secret access, no data-plane reads.
 resource "aws_iam_role_policy" "compliance_readonly" {
+  # checkov:skip=CKV_AWS_355: The kms/rds/elb Describe and List actions used here
+  # do not support resource-level permissions - AWS requires Resource="*" for them.
+  # The policy is still least-privilege: read-only, no write/secret/data-plane access.
   name = "compliance-readonly-describe"
   role = aws_iam_role.compliance_readonly.id
 
