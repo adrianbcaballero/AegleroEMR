@@ -117,7 +117,7 @@
       "family_name": "Access Control",
       "title": "Limit unsuccessful logon attempts.",
       "sprs_weight": 3,
-      "type": "attested",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "AC.L2-3.1.8",
         "hipaa": null,
@@ -162,7 +162,7 @@
       "family_name": "Access Control",
       "title": "Terminate a user session after a defined condition.",
       "sprs_weight": 3,
-      "type": "attested",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "AC.L2-3.1.11",
         "hipaa": null,
@@ -743,7 +743,7 @@
       "family_name": "Identification and Authentication",
       "title": "Enforce minimum password complexity.",
       "sprs_weight": 1,
-      "type": "attested",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "IA.L2-3.5.7",
         "hipaa": null,
