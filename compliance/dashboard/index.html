@@ -18,8 +18,9 @@
     --primary-dark: #16181d;   /* sidebar navy */
     --met: #1f9d57;            /* green */
     --partial: #e08c1a;        /* amber */
-    --gap: #94a1b2;            /* gray */
+    --gap: #7a8699;            /* gray */
     --fail: #c62828;           /* red */
+    --accent: #2f5fd6;         /* blue (attested) */
     --sans: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --head: 'DM Sans', var(--sans);
   }
@@ -27,10 +28,10 @@
   body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
   /* Faded, fixed, centered logo watermark that stays put while the page scrolls. */
   body::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background: url('logo.png') no-repeat center center; background-size: min(62vmin, 540px); opacity: 0.10; }
+    background: url('logo.png') no-repeat center center; background-size: min(78vmin, 680px); opacity: 0.15; }
 
   /* ---- top bar ---- */
-  .topbar { background: var(--card); border-bottom: 1px solid var(--border); position: relative; z-index: 2; }
+  .topbar { background: var(--card); border-bottom: 3px solid var(--primary); position: relative; z-index: 2; }
   .topbar .inner { max-width: 1080px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 14px; }
   .topbar img { height: 34px; width: auto; }
   .brand { font-family: var(--head); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
@@ -147,12 +148,17 @@
     '<div class="empty">No data. Run <code>python compliance/run.py</code> to generate <code>data.js</code>.</div>'; return; }
 
   var COLOR = { met: 'var(--met)', partial: 'var(--partial)', 'not-collected': 'var(--gap)',
-                'not-met': 'var(--fail)', error: 'var(--fail)', na: 'var(--gap)', inherited: 'var(--met)' };
+                'not-met': 'var(--fail)', error: 'var(--fail)', na: 'var(--gap)',
+                inherited: 'var(--met)', attested: 'var(--accent)', policy: 'var(--gap)',
+                manual: 'var(--gap)' };
   var TINT = { met: '#e7f6ee', partial: '#fdf1de', 'not-collected': '#eef1f4',
-               'not-met': '#fbe9e9', error: '#fbe9e9', na: '#eef1f4', inherited: '#e7f6ee' };
+               'not-met': '#fbe9e9', error: '#fbe9e9', na: '#eef1f4',
+               inherited: '#e7f6ee', attested: '#e8eefc', policy: '#eef1f4', manual: '#eef1f4' };
   var LABEL = { met: 'Implemented', partial: 'Partial', 'not-collected': 'Not assessed',
-                'not-met': 'Not implemented', error: 'Error', na: 'N/A', inherited: 'Inherited' };
-  var ICON = { met: '✓', partial: '!', 'not-collected': '–', 'not-met': '✕', error: '✕', na: '–', inherited: '✓' };
+                'not-met': 'Not implemented', error: 'Error', na: 'N/A',
+                inherited: 'Inherited', attested: 'Attested', policy: 'Policy', manual: 'Policy' };
+  var ICON = { met: '✓', partial: '!', 'not-collected': '–', 'not-met': '✕', error: '✕',
+               na: '–', inherited: '✓', attested: '~', policy: '§', manual: '§' };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
@@ -168,7 +174,7 @@
   $('topright').innerHTML = '<b>' + esc(D.framework) + '</b><br>generated ' + esc(D.generated_at);
   $('scope').textContent =
     'Demonstration: Aeglero is a HIPAA-scoped healthcare system; its controls are mapped to NIST SP 800-171 ' +
-    'to demonstrate continuous-compliance automation. Not an official assessment.';
+    'to demonstrate continuous-compliance automation.';
 
   // ---- SPRS ring ----
   var pct = s.sprs_score / s.sprs_base;
@@ -204,7 +210,7 @@
 
   // ---- controls grouped by family ----
   var fams = {}; D.controls.forEach(function (c) { (fams[c.family] = fams[c.family] || []).push(c); });
-  var ord = { met: 0, inherited: 0, partial: 1, 'not-met': 2, error: 3, 'not-collected': 4, na: 5 };
+  var ord = { met: 0, inherited: 0, attested: 0, policy: 0, manual: 0, partial: 1, 'not-met': 2, error: 3, 'not-collected': 4, na: 5 };
   var html = '';
   Object.keys(fams).forEach(function (fam) {
     var list = fams[fam].slice().sort(function (a, b) { return ord[a.status] - ord[b.status]; });
