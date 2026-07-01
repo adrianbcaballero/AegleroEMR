@@ -38,7 +38,8 @@ HAS_COLLECTOR = {"3.1.1", "3.1.2", "3.3.1", "3.3.2", "3.3.8", "3.5.3",
                  "3.11.2", "3.13.8", "3.13.11", "3.14.1",
                  "3.12.1", "3.12.2", "3.12.3", "3.12.4",  # CA family via self_assessment
                  "3.1.8", "3.1.11", "3.5.7",              # identity_hardening
-                 "3.13.10", "3.13.16"}                    # crypto_config (key mgmt, at rest)
+                 "3.13.10", "3.13.16",                    # crypto_config (key mgmt, at rest)
+                 "3.13.1", "3.13.5", "3.13.6"}            # network_config (boundary/subnets/deny)
 
 # Controls that are genuinely NOT satisfied yet (no policy/procedure or implementation
 # in place). They are honest gaps: scored not-met, appear in the POA&M, and deduct SPRS.
