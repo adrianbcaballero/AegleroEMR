@@ -211,8 +211,10 @@
 
   $('topright').innerHTML = '<b>' + esc(D.framework) + '</b><br>generated ' + esc(D.generated_at);
   $('scope').textContent =
-    'Demonstration: Aeglero is a HIPAA-scoped healthcare system, assessed against NIST SP 800-171 and ' +
-    'crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2 to demonstrate continuous-compliance automation.';
+    'Demonstration: Aeglero is a HIPAA-scoped healthcare system, continuously assessed against NIST SP 800-171 ' +
+    'and crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2. The Controls tab evidences each control automatically ' +
+    'from the code and infrastructure and scores it (SPRS); the AI Review tab shows an independent AI reviewer that ' +
+    'skeptically re-checks that evidence and flags gaps (advisory only, it never changes a status or the score).';
 
   // ---- SPRS ring ----
   var pct = s.sprs_score / s.sprs_base;
