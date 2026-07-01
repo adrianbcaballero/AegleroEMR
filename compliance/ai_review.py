@@ -41,10 +41,12 @@ OUT_NARR_MD = HERE / "output" / "ai_narratives.md"
 # Human-approved narratives (committed, tracked). Populated only via --approve after
 # a person reviews the draft. The SSP generator uses these; raw drafts above do not.
 APPROVED_PATH = HERE / "approved_narratives.json"
+# Dashboard feed for the AI Review tab (window.AI_REVIEW). Review mode writes this.
+DASHBOARD_AI_JS = HERE / "dashboard" / "ai_review.js"
 
 MODEL = os.environ.get("COMPLIANCE_AI_MODEL", "claude-opus-4-8")
 NARRATIVE_MODEL = os.environ.get("COMPLIANCE_AI_NARRATIVE_MODEL", "claude-sonnet-5")
-MAX_CONTROLS = int(os.environ.get("COMPLIANCE_AI_MAX_CONTROLS", "20"))
+MAX_CONTROLS = int(os.environ.get("COMPLIANCE_AI_MAX_CONTROLS", "40"))
 CONTEXT_LINES = 12    # fallback context (each side) for non-Python refs or when
                       # enclosing-block extraction does not apply
 MAX_BLOCK_LINES = 60  # cap on an extracted function/class block, to stay bounded
@@ -502,6 +504,17 @@ def main() -> int:
     out_json.write_text(json.dumps({"results": results, "dry_run": not live, "mode": args.mode},
                                    indent=2), encoding="utf-8")
     out_md.write_text(renderer(results, dry_run=not live), encoding="utf-8")
+
+    # Review mode also feeds the dashboard's AI Review tab.
+    if not is_narr:
+        feed = {
+            "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            "dry_run": not live,
+            "results": results,
+        }
+        DASHBOARD_AI_JS.write_text(
+            "window.AI_REVIEW = " + json.dumps(feed, indent=2) + ";\n", encoding="utf-8")
+
     print(f"{'DRY RUN: ' if not live else ''}{args.mode} of {len(results)} control(s). "
           f"Wrote {out_md.relative_to(REPO_ROOT)}")
     return 0
