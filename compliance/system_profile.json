@@ -2,12 +2,14 @@
   "system_name": "Aeglero EMR",
   "system_short_name": "Aeglero",
   "version": "1.0",
+  "repo_url": "https://github.com/adrianbcaballero/AegleroEMR",
+  "repo_branch": "main",
   "owner": "Aeglero (demonstration system)",
   "description": "Multi-tenant electronic medical record (EMR) platform for residential addiction and behavioral-health treatment programs. Provides bed management, episode-based clinical records, a documentation builder, consent management, and a tamper-evident audit log.",
   "authorization_boundary": "AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python API) -> RDS PostgreSQL in an isolated subnet with no internet route. Static frontend bundle served from S3 via Origin Access Control. Secrets in AWS Secrets Manager; encryption via four customer-managed KMS keys.",
   "data_types": [
-    "Protected Health Information (PHI) — HIPAA Security Rule",
-    "Substance Use Disorder records — 42 CFR Part 2"
+    "Protected Health Information (PHI), HIPAA Security Rule",
+    "Substance Use Disorder records, 42 CFR Part 2"
   ],
   "hosting": "Amazon Web Services (ECS Fargate, RDS Multi-AZ, CloudFront, S3, KMS, Secrets Manager, Route 53)",
   "assessment_scope_note": "Aeglero is a HIPAA-scoped healthcare system; its real regulatory obligation is HIPAA + 42 CFR Part 2. This document maps Aeglero's existing controls to NIST SP 800-171 Rev 2 to DEMONSTRATE continuous-compliance automation. Aeglero is not a federal CUI system and this is not an official assessment artifact."

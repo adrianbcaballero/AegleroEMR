@@ -1,5 +1,5 @@
 """
-access_control collector — EXAMINE method.
+access_control collector - EXAMINE method.
 
 Proves Aeglero enforces access control and MFA by examining the auth middleware,
 the RBAC permission model, and the TOTP MFA implementation. No creds needed.

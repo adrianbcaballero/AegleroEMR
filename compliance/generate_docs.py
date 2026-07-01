@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -29,6 +30,9 @@ PROFILE_PATH = HERE / "system_profile.json"
 SSP_PATH = OUTPUT_DIR / "SSP.md"
 POAM_PATH = OUTPUT_DIR / "POAM.md"
 POAM_CSV_PATH = OUTPUT_DIR / "POAM.csv"
+
+DASHBOARD_DIR = HERE / "dashboard"
+DASHBOARD_DATA_PATH = DASHBOARD_DIR / "data.js"
 
 # Statuses that belong in the SSP (implemented) vs the POA&M (open items).
 SSP_STATUSES = {"met", "partial", "inherited", "na"}
@@ -57,6 +61,24 @@ def _load(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+# Matches a repo file path with an optional ":line" suffix, e.g.
+# "backend/services/audit_logger.py:9" or ".github/workflows/ci.yml".
+_REF_RE = re.compile(r"^([\w.\-/]+\.\w+)(?::(\d+))?$")
+
+
+def _gh_url(ref: str, base: str | None, branch: str) -> str | None:
+    """Turn an evidence ref into a GitHub blob URL, or None if it isn't a file."""
+    if not base:
+        return None
+    m = _REF_RE.match(ref or "")
+    if not m:
+        return None
+    url = f"{base.rstrip('/')}/blob/{branch}/{m.group(1)}"
+    if m.group(2):
+        url += f"#L{m.group(2)}"
+    return url
+
+
 def _remediation_hint(finding: dict | None) -> str:
     """Prefer an explicit 'POA&M:' note left by a collector; else a default."""
     if finding:
@@ -81,7 +103,7 @@ def render_ssp(report: dict, profile: dict) -> str:
     lines: list[str] = []
     a = lines.append
 
-    a(f"# System Security Plan (SSP) — {profile['system_name']}")
+    a(f"# System Security Plan (SSP): {profile['system_name']}")
     a("")
     a(f"> **Auto-generated** by the Aeglero compliance engine on "
       f"{report['generated_at']}. Do not hand-edit; regenerate from `status.json`.")
@@ -108,7 +130,7 @@ def render_ssp(report: dict, profile: dict) -> str:
     a("")
     a(f"- **Framework:** {report['framework']}")
     a(f"- **SPRS score:** {s['sprs_score']} / {s['sprs_base']} "
-      f"(−{s['points_deducted']}) — _{s['sprs_basis']}_")
+      f"(-{s['points_deducted']}) - _{s['sprs_basis']}_")
     a(f"- **Automated evidence coverage:** {s['automated_coverage_pct']}% "
       f"({s['controls_with_evidence']} of {s['controls_applicable']} applicable controls)")
     a(f"- **Status breakdown:** {s['status_counts']}")
@@ -121,14 +143,14 @@ def render_ssp(report: dict, profile: dict) -> str:
         a("_No implemented controls to report._")
     for c in implemented:
         f = c.get("finding") or {}
-        a(f"### {c['id']} — {c['title']}")
+        a(f"### {c['id']}: {c['title']}")
         a("")
         a(f"- **Family:** {c['family']} ({c.get('family_name', '')})")
         a(f"- **Status:** {STATUS_LABEL.get(c['status'], c['status'])}")
         a(f"- **SPRS weight:** {c['sprs_weight']}")
         if f:
             a(f"- **Assessment method:** {f.get('method', 'EXAMINE')}")
-            objs = ", ".join(f.get("objective_ids", [])) or "—"
+            objs = ", ".join(f.get("objective_ids", [])) or "-"
             a(f"- **Objectives addressed:** {objs}")
             a("")
             a(f"**Implementation statement.** {f.get('summary', '')}")
@@ -136,8 +158,13 @@ def render_ssp(report: dict, profile: dict) -> str:
             ev = f.get("evidence", [])
             if ev:
                 a("**Evidence.**")
+                base = profile.get("repo_url")
+                branch = profile.get("repo_branch", "main")
                 for e in ev:
-                    a(f"- `{e.get('ref','')}` — {e.get('detail','')}")
+                    ref = e.get("ref", "")
+                    url = _gh_url(ref, base, branch)
+                    ref_md = f"[`{ref}`]({url})" if url else f"`{ref}`"
+                    a(f"- {ref_md}: {e.get('detail','')}")
                 a("")
             a(f"**Provenance.** collected by `{f.get('collector','')}` at "
               f"{f.get('collected_at','')} · evidence SHA-256 "
@@ -157,7 +184,7 @@ def _poam_rows(report: dict) -> list[dict]:
         f = c.get("finding")
         weakness = (f.get("summary") if f
                     else "Control is not yet assessed by an automated collector.")
-        method = (f.get("method") if f else "—")
+        method = (f.get("method") if f else "-")
         rows.append({
             "item": n,
             "control_id": c["id"],
@@ -178,7 +205,7 @@ def render_poam(report: dict, profile: dict, rows: list[dict]) -> str:
     a = lines.append
     points_at_risk = sum(r["sprs_points"] for r in rows)
 
-    a(f"# Plan of Action & Milestones (POA&M) — {profile['system_name']}")
+    a(f"# Plan of Action & Milestones (POA&M): {profile['system_name']}")
     a("")
     a(f"> **Auto-generated** by the Aeglero compliance engine on "
       f"{report['generated_at']}. Regenerate from `status.json`.")
@@ -191,7 +218,7 @@ def render_poam(report: dict, profile: dict, rows: list[dict]) -> str:
       "next reports the control as met.")
     a("")
     if not rows:
-        a("_No open items — all cataloged controls are met._")
+        a("_No open items. All cataloged controls are met._")
         return "\n".join(lines) + "\n"
 
     a("| # | Control | Status | Weakness | SPRS pts | Detected by | Remediation / milestone | Scheduled completion |")
@@ -219,7 +246,7 @@ def generate(report: dict | None = None) -> list[Path]:
     if report is None:
         if not STATUS_PATH.exists():
             raise FileNotFoundError(
-                f"{STATUS_PATH} not found — run `python compliance/run.py` first.")
+                f"{STATUS_PATH} not found; run `python compliance/run.py` first.")
         report = _load(STATUS_PATH)
     profile = _load(PROFILE_PATH)
 
@@ -229,7 +256,21 @@ def generate(report: dict | None = None) -> list[Path]:
     rows = _poam_rows(report)
     POAM_PATH.write_text(render_poam(report, profile, rows), encoding="utf-8")
     write_poam_csv(rows, POAM_CSV_PATH)
-    return [SSP_PATH, POAM_PATH, POAM_CSV_PATH]
+
+    # Emit the report as a JS global so dashboard/index.html can load it from
+    # the local filesystem (file://) without a server or fetch/CORS issues.
+    DASHBOARD_DIR.mkdir(parents=True, exist_ok=True)
+    report_for_js = dict(report)
+    report_for_js["repo"] = {
+        "url": profile.get("repo_url"),
+        "branch": profile.get("repo_branch", "main"),
+    }
+    DASHBOARD_DATA_PATH.write_text(
+        "// AUTO-GENERATED by generate_docs.py -- do not edit.\n"
+        "window.COMPLIANCE_STATUS = " + json.dumps(report_for_js, indent=2) + ";\n",
+        encoding="utf-8",
+    )
+    return [SSP_PATH, POAM_PATH, POAM_CSV_PATH, DASHBOARD_DATA_PATH]
 
 
 def main() -> int:

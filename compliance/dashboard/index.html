@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Aeglero - Continuous Compliance</title>
+<link rel="icon" href="logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Aeglero brand (from frontend/app/globals.css) */
+    --bg: #fafafa; --card: #ffffff; --text: #191c22; --muted: #6b7280;
+    --border: #dcdcdc; --border2: #ececec;
+    --primary: #b81e1e;        /* hsl(0 72% 42%) */
+    --primary-dark: #16181d;   /* sidebar navy */
+    --met: #1f9d57;            /* green */
+    --partial: #e08c1a;        /* amber */
+    --gap: #94a1b2;            /* gray */
+    --fail: #c62828;           /* red */
+    --sans: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --head: 'DM Sans', var(--sans);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+  /* Faded, fixed, centered logo watermark that stays put while the page scrolls. */
+  body::before { content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: url('logo.png') no-repeat center center; background-size: min(62vmin, 540px); opacity: 0.10; }
+
+  /* ---- top bar ---- */
+  .topbar { background: var(--card); border-bottom: 1px solid var(--border); position: relative; z-index: 2; }
+  .topbar .inner { max-width: 1080px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; gap: 14px; }
+  .topbar img { height: 34px; width: auto; }
+  .brand { font-family: var(--head); font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
+  .brand .thin { color: var(--muted); font-weight: 500; }
+  .topbar .right { margin-left: auto; text-align: right; color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+  .topbar .right b { color: var(--text); font-weight: 600; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 26px 20px 80px; position: relative; z-index: 1; }
+  .scope { margin: 0 0 24px; padding: 10px 14px;
+           background: #fff; border: 1px solid var(--border2);
+           color: var(--muted); font-size: 12.5px; border-radius: 8px; }
+
+  /* ---- hero ---- */
+  .hero { display: grid; grid-template-columns: 240px 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .ring-panel { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring { position: relative; width: 150px; height: 150px; }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .mid { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .score { font-family: var(--head); font-size: 30px; font-weight: 700; line-height: 1; }
+  .ring .score small { font-size: 15px; color: var(--muted); font-weight: 600; }
+  .ring .cap { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 6px; }
+  .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .stat .big { font-family: var(--head); font-size: 38px; font-weight: 700; margin-top: 8px; }
+  .stat .big small { font-size: 17px; color: var(--muted); font-weight: 600; }
+  .stat .note { color: var(--muted); font-size: 12.5px; margin-top: 10px; }
+  .track { height: 8px; border-radius: 99px; background: #eee; margin-top: 14px; overflow: hidden; }
+  .track > i { display: block; height: 100%; border-radius: 99px; }
+
+  /* ---- sections ---- */
+  h2 { font-family: var(--head); font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+       color: var(--muted); margin: 30px 0 10px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; margin-bottom: 14px; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 99px; margin-right: 6px; vertical-align: middle; }
+  .famhead { font-size: 12px; color: var(--muted); font-weight: 600; margin: 16px 0 8px; }
+
+  .ctrl { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
+  .ctrl + .ctrl { margin-top: 0; }
+  .ctrl summary { list-style: none; cursor: pointer; padding: 13px 16px; display: flex; align-items: center; gap: 12px; }
+  .ctrl summary::-webkit-details-marker { display: none; }
+  .ctrl[open] summary { border-bottom: 1px solid var(--border2); }
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+            padding: 3px 10px 3px 8px; border-radius: 99px; white-space: nowrap; }
+  .status .ic { font-size: 12px; line-height: 1; }
+  .cid { font-family: var(--head); font-variant-numeric: tabular-nums; font-weight: 700; min-width: 56px; font-size: 14px; }
+  .ctitle { flex: 1; font-size: 14px; }
+  .cwt { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .body { padding: 14px 16px 18px; color: var(--muted); font-size: 13.5px; }
+  .body .stmt { color: var(--text); margin: 4px 0 12px; }
+  .kv { margin: 4px 0; }
+  .kv b { color: var(--text); font-weight: 600; }
+  .ev { background: #fbfbfc; border: 1px solid var(--border2); border-radius: 8px; padding: 9px 12px; margin: 8px 0; }
+  .ev code { color: var(--primary); font-size: 12.5px; font-weight: 500; }
+  .ev a.ghlink { text-decoration: none; }
+  .ev a.ghlink .arw { color: var(--muted); font-size: 11px; }
+  .ev a.ghlink:hover code { text-decoration: underline; }
+  .prov { font-size: 12px; color: var(--gap); margin-top: 10px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--card);
+          border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border2); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; background: #fbfbfc; }
+  tr:last-child td { border-bottom: none; }
+  .empty { color: var(--muted); padding: 22px; text-align: center; background: var(--card);
+           border: 1px solid var(--border); border-radius: 12px; }
+  .foot { margin-top: 30px; color: var(--gap); font-size: 12px; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="inner">
+      <img src="logo.png" alt="Aeglero" />
+      <div class="brand">Aeglero <span class="thin">· Continuous Compliance</span></div>
+      <div class="right" id="topright"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="scope" id="scope"></div>
+
+    <div class="hero">
+      <div class="panel ring-panel" id="ringpanel"></div>
+      <div class="panel stat" id="cov"></div>
+      <div class="panel stat" id="poamstat"></div>
+    </div>
+
+    <h2>Control implementation</h2>
+    <div class="legend" id="legend"></div>
+    <div id="controls"></div>
+
+    <h2>Plan of Action &amp; Milestones (POA&amp;M)</h2>
+    <div id="poam"></div>
+
+    <div class="foot" id="foot"></div>
+  </div>
+
+<script src="data.js"></script>
+<script>
+(function () {
+  var D = window.COMPLIANCE_STATUS;
+  var REPO = D && D.repo ? D.repo : null;
+  var $ = function (id) { return document.getElementById(id); };
+
+  // Turn an evidence ref ("path/file.py:9" or "path/file.yml") into a GitHub URL.
+  function ghUrl(ref) {
+    if (!REPO || !REPO.url) return null;
+    var m = /^([\w.\-/]+\.\w+)(?::(\d+))?$/.exec(ref || '');
+    if (!m) return null;
+    var url = REPO.url.replace(/\/$/, '') + '/blob/' + (REPO.branch || 'main') + '/' + m[1];
+    if (m[2]) url += '#L' + m[2];
+    return url;
+  }
+  if (!D) { document.querySelector('.wrap').innerHTML =
+    '<div class="empty">No data. Run <code>python compliance/run.py</code> to generate <code>data.js</code>.</div>'; return; }
+
+  var COLOR = { met: 'var(--met)', partial: 'var(--partial)', 'not-collected': 'var(--gap)',
+                'not-met': 'var(--fail)', error: 'var(--fail)', na: 'var(--gap)', inherited: 'var(--met)' };
+  var TINT = { met: '#e7f6ee', partial: '#fdf1de', 'not-collected': '#eef1f4',
+               'not-met': '#fbe9e9', error: '#fbe9e9', na: '#eef1f4', inherited: '#e7f6ee' };
+  var LABEL = { met: 'Implemented', partial: 'Partial', 'not-collected': 'Not assessed',
+                'not-met': 'Not implemented', error: 'Error', na: 'N/A', inherited: 'Inherited' };
+  var ICON = { met: '✓', partial: '!', 'not-collected': '–', 'not-met': '✕', error: '✕', na: '–', inherited: '✓' };
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+  function pill(st) {
+    return '<span class="status" style="background:' + TINT[st] + ';color:' + COLOR[st] + '">' +
+           '<span class="ic">' + ICON[st] + '</span>' + (LABEL[st] || st) + '</span>';
+  }
+
+  var s = D.summary;
+  var isGap = function (st) { return ['not-met', 'partial', 'not-collected', 'error'].indexOf(st) >= 0; };
+  var gaps = D.controls.filter(function (c) { return isGap(c.status); });
+
+  $('topright').innerHTML = '<b>' + esc(D.framework) + '</b><br>generated ' + esc(D.generated_at);
+  $('scope').textContent =
+    'Demonstration: Aeglero is a HIPAA-scoped healthcare system; its controls are mapped to NIST SP 800-171 ' +
+    'to demonstrate continuous-compliance automation. Not an official assessment.';
+
+  // ---- SPRS ring ----
+  var pct = s.sprs_score / s.sprs_base;
+  var pctInt = Math.round(pct * 100);
+  var ringColor = pctInt >= 88 ? 'var(--met)' : pctInt >= 70 ? 'var(--partial)' : 'var(--fail)';
+  var R = 62, C = 2 * Math.PI * R, off = C * (1 - pct);
+  $('ringpanel').innerHTML =
+    '<div class="ring"><svg width="150" height="150" viewBox="0 0 150 150">' +
+      '<circle cx="75" cy="75" r="' + R + '" fill="none" stroke="#eee" stroke-width="12"/>' +
+      '<circle cx="75" cy="75" r="' + R + '" fill="none" stroke="' + ringColor + '" stroke-width="12" ' +
+        'stroke-linecap="round" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + off.toFixed(1) + '"/>' +
+    '</svg><div class="mid"><div class="score">' + s.sprs_score + '<small>/' + s.sprs_base + '</small></div>' +
+    '<div class="cap">SPRS score</div></div></div>';
+
+  // ---- coverage ----
+  $('cov').innerHTML =
+    '<div class="label">Automated evidence coverage</div>' +
+    '<div class="big">' + s.automated_coverage_pct + '<small>%</small></div>' +
+    '<div class="track"><i style="width:' + Math.max(3, s.automated_coverage_pct) + '%;background:var(--met)"></i></div>' +
+    '<div class="note">' + s.controls_with_evidence + ' of ' + s.controls_applicable + ' applicable controls proven by a collector</div>';
+
+  // ---- POA&M stat ----
+  var atRisk = gaps.reduce(function (a, c) { return a + (c.sprs_weight || 0); }, 0);
+  $('poamstat').innerHTML =
+    '<div class="label">Open POA&amp;M items</div>' +
+    '<div class="big">' + gaps.length + '</div>' +
+    '<div class="note">' + atRisk + ' SPRS points at risk · resolves automatically as collectors report each control met</div>';
+
+  // ---- legend ----
+  $('legend').innerHTML = Object.keys(LABEL).filter(function (k) {
+    return D.controls.some(function (c) { return c.status === k; }); })
+    .map(function (k) { return '<span><i class="dot" style="background:' + COLOR[k] + '"></i>' + LABEL[k] + '</span>'; }).join('');
+
+  // ---- controls grouped by family ----
+  var fams = {}; D.controls.forEach(function (c) { (fams[c.family] = fams[c.family] || []).push(c); });
+  var ord = { met: 0, inherited: 0, partial: 1, 'not-met': 2, error: 3, 'not-collected': 4, na: 5 };
+  var html = '';
+  Object.keys(fams).forEach(function (fam) {
+    var list = fams[fam].slice().sort(function (a, b) { return ord[a.status] - ord[b.status]; });
+    html += '<div class="famhead">' + esc(fam) + ': ' + esc(list[0].family_name || '') + '</div>';
+    list.forEach(function (c) { html += ctrlRow(c); });
+  });
+  $('controls').innerHTML = html;
+
+  function ctrlRow(c) {
+    var f = c.finding;
+    var head = '<summary>' + pill(c.status) +
+      '<span class="cid">' + esc(c.id) + '</span>' +
+      '<span class="ctitle">' + esc(c.title) + '</span>' +
+      '<span class="cwt">wt ' + esc(c.sprs_weight) + '</span></summary>';
+    var b = '<div class="body">';
+    if (f) {
+      b += '<div class="kv"><b>Method:</b> ' + esc(f.method) + '  ·  <b>Objectives:</b> ' +
+           esc((f.objective_ids || []).join(', ') || '-') + '</div>';
+      b += '<div class="stmt">' + esc(f.summary) + '</div>';
+      (f.evidence || []).forEach(function (e) {
+        var u = ghUrl(e.ref);
+        var refHtml = u
+          ? '<a class="ghlink" href="' + u + '" target="_blank" rel="noopener"><code>' + esc(e.ref) + '</code> <span class="arw">&#8599; view on GitHub</span></a>'
+          : '<code>' + esc(e.ref) + '</code>';
+        b += '<div class="ev">' + refHtml + '<br>' + esc(e.detail) + '</div>'; });
+      b += '<div class="prov">collected by ' + esc(f.collector) + ' at ' + esc(f.collected_at) +
+           ' · evidence SHA-256 ' + esc((f.evidence_hash || '').slice(0, 16)) + '…</div>';
+    } else {
+      b += '<div class="stmt">No automated evidence collected yet. This control appears in the POA&amp;M below until a collector proves it.</div>';
+    }
+    return '<details class="ctrl">' + head + b + '</div></details>';
+  }
+
+  // ---- POA&M table ----
+  if (!gaps.length) { $('poam').innerHTML = '<div class="empty">No open items. All cataloged controls are met.</div>'; }
+  else {
+    var rows = gaps.map(function (c, i) {
+      var w = c.finding ? c.finding.summary : 'Control is not yet assessed by an automated collector.';
+      return '<tr><td>' + (i + 1) + '</td><td class="cid">' + esc(c.id) + '</td><td>' + pill(c.status) +
+             '</td><td>' + esc(w) + '</td><td style="text-align:center">' + esc(c.sprs_weight) + '</td></tr>'; }).join('');
+    $('poam').innerHTML = '<table><thead><tr><th>#</th><th>Control</th><th>Status</th><th>Weakness</th><th>SPRS pts</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  $('foot').textContent = 'Auto-generated from status.json by the Aeglero compliance engine. Full SSP and POA&M (with milestones) are in compliance/output/.';
+})();
+</script>
+</body>
+</html>

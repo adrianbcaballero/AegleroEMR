@@ -1,5 +1,5 @@
 """
-flaw_remediation collector — EXAMINE method.
+flaw_remediation collector - EXAMINE method.
 
 Proves Aeglero scans for vulnerabilities and gates merges on the results, by
 examining the CI pipeline definition. No cloud creds or running services needed.

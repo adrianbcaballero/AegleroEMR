@@ -1,5 +1,5 @@
 """
-audit_chain collector — EXAMINE method.
+audit_chain collector - EXAMINE method.
 
 Proves that Aeglero implements a tamper-evident audit log by examining the source
 of the audit subsystem. This is legitimate assessment evidence under NIST 800-171A
