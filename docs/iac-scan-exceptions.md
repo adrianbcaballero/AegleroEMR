@@ -43,6 +43,14 @@ Every entry below has a "Remove this suppression when…" line so it's clear wha
 
 **Remove this suppression when:** VPC endpoints are added for ECR (API + DKR), Secrets Manager, KMS, CloudWatch Logs, and SSM, and this egress rule is replaced with endpoint-specific destinations.
 
+### AVD-AWS-0132 — `aws_s3_bucket.compliance_dashboard` not encrypted with a CMK (HIGH)
+
+**Finding:** The compliance dashboard bucket uses SSE-S3 (AES256), not a customer-managed KMS key. (Trivy's equivalent of Checkov `CKV_AWS_145`.)
+
+**Why suppressed:** The bucket holds only the public, non-sensitive compliance dashboard (no PHI/secrets; the repo is public). SSE-S3 is sufficient. Using the shared `aws_kms_key.s3` CMK would require its CloudFront OAC decrypt grant to name this distribution's ARN, which creates a `distribution → bucket → key → distribution` dependency cycle in Terraform.
+
+**Remove this suppression when:** The dashboard is repointed at sensitive content, or the OAC decrypt grant is refactored (e.g. account-scoped `AWS:SourceAccount` condition) so a dedicated CMK can be used without the cycle.
+
 ## Checkov suppressions
 
 Grouped by the kind of suppression.

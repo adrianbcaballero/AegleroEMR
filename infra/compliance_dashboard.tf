@@ -32,6 +32,9 @@ resource "aws_s3_bucket_versioning" "compliance_dashboard" {
   }
 }
 
+# trivy:ignore:AVD-AWS-0132 -- Public, non-sensitive demo content; SSE-S3 is sufficient
+# and the shared CMK can't be used without a distribution->bucket->key dependency cycle.
+# See docs/iac-scan-exceptions.md.
 resource "aws_s3_bucket_server_side_encryption_configuration" "compliance_dashboard" {
   bucket = aws_s3_bucket.compliance_dashboard.id
   rule {
