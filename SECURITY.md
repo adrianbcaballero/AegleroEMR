@@ -1,8 +1,20 @@
 # Security Policy
 
-This document describes how to report security issues in Aeglero, the technical controls in place to protect protected health information (PHI), and how those controls map to the HIPAA Security Rule and 42 CFR Part 2.
+This document describes how to report security issues in Aeglero, the technical controls in place to protect protected health information (PHI), how those controls are continuously assessed against NIST SP 800-171, and how they map to the HIPAA Security Rule and 42 CFR Part 2.
 
 If you're looking for the implementation behind any control, [ARCHITECTURE.md](ARCHITECTURE.md) has the deep-dive on auth, multi-tenancy, and the audit log integrity scheme. [README.md](README.md) covers tech stack and general information. The [`docs/`](docs/) folder holds the supporting GRC artifacts: HIPAA Risk Analysis, controls evidence, gap analysis, vendor register, organizational policies, and operational runbooks.
+
+---
+
+## Continuous compliance monitoring
+
+Aeglero is assessed continuously against all 110 NIST SP 800-171 Rev 2 controls by a compliance engine in [`compliance/`](compliance/README.md). It computes an SPRS score, auto-generates a System Security Plan and a Plan of Action and Milestones, and crosswalks every control to its HIPAA Security Rule, ONC Health IT, CMMC Level 2, and 42 CFR Part 2 equivalents, so a single piece of evidence maps across frameworks.
+
+Evidence is gathered by collectors that read the application source, the Terraform infrastructure, and the CI configuration, so each automated control status links back to the specific code or config that supports it. The assessment runs on a schedule with drift detection, and an optional collector verifies the live AWS account through a read-only role assumed via GitHub OIDC.
+
+An optional, advisory AI reviewer gives each automated control a second, independent read. It evaluates the collected evidence and the exact code that evidence cites, judges whether the evidence supports the control, and flags gaps. It is advisory only and human-gated: it never changes a control status or the SPRS score, and a data allowlist plus a secret scrubber run before any model call so whole files, credentials, and secrets are never sent. Its findings are shown read-only on the dashboard's AI Review tab, next to the engine's own verdict. The threat model and governance for this feature are documented in [compliance/docs/ai-evidence-review.md](compliance/docs/ai-evidence-review.md).
+
+The live dashboard is at [compliance.aeglero.com](https://compliance.aeglero.com) (available on request). The assessment, the AI review, and the published dashboard are regenerated weekly by a scheduled workflow, so what a reader sees stays current. See [compliance/README.md](compliance/README.md) for the full design.
 
 ---
 
@@ -21,14 +33,6 @@ Please include:
 - The environment where you observed it
 - Your proposed severity assessment (we'll independently classify but yours helps)
 - Whether you'd like public credit after the fix lands
-
----
-
-## Continuous compliance monitoring
-
-Aeglero is assessed continuously against all 110 NIST SP 800-171 Rev 2 controls by a compliance engine in [`compliance/`](compliance/README.md). It computes an SPRS score, auto-generates a System Security Plan and a Plan of Action and Milestones, and crosswalks every control to its HIPAA Security Rule, ONC Health IT, CMMC Level 2, and 42 CFR Part 2 equivalents, so a single piece of evidence maps across frameworks.
-
-Evidence is gathered by collectors that read the application source, the Terraform infrastructure, and the CI configuration, so each automated control status links back to the specific code or config that supports it. The assessment runs on a schedule with drift detection, and an optional collector verifies the live AWS account through a read-only role assumed via GitHub OIDC. The live dashboard is at [compliance.aeglero.com](https://compliance.aeglero.com) (available on request); see [compliance/README.md](compliance/README.md) for the full design.
 
 ---
 
