@@ -36,7 +36,8 @@ L1 = {"3.1.1", "3.1.2", "3.1.20", "3.1.22", "3.5.1", "3.5.2", "3.8.3", "3.10.1",
 # Controls that have a real collector today (status comes from the collector at runtime).
 HAS_COLLECTOR = {"3.1.1", "3.1.2", "3.3.1", "3.3.2", "3.3.8", "3.5.3",
                  "3.11.2", "3.13.8", "3.13.11", "3.14.1",
-                 "3.12.1", "3.12.2", "3.12.3", "3.12.4"}  # CA family via self_assessment
+                 "3.12.1", "3.12.2", "3.12.3", "3.12.4",  # CA family via self_assessment
+                 "3.1.8", "3.1.11", "3.5.7"}              # identity_hardening
 
 # Implemented in the application but not YET covered by a collector. These are
 # attested (manual) rather than counted as gaps -- they are automation-roadmap
@@ -218,12 +219,15 @@ def build():
     for cid, title, weight, ctype, hipaa, onc, part2, rationale in ROWS:
         fam = FAM_OF(cid)
         level = 1 if cid in L1 else 2
+        # Controls with a collector are automated regardless of the row's default.
+        if cid in HAS_COLLECTOR:
+            ctype = "automated"
         # Implemented-but-not-automated controls are attested, not gaps.
-        if cid in ROADMAP:
+        elif cid in ROADMAP:
             ctype = "attested"
         # Split the legacy "manual" bucket: genuine docs/process -> policy;
         # everything else implemented in the app -> attested.
-        if ctype == "manual":
+        elif ctype == "manual":
             ctype = "policy" if cid in POLICY else "attested"
         mappings = {
             "cmmc_l2": f"{fam}.L{level}-{cid}",
