@@ -30,7 +30,7 @@ CF = "infra/cloudfront.tf"
 
 class CryptoConfigCollector(Collector):
     name = "crypto_config"
-    provides = ["3.13.8", "3.13.11"]
+    provides = ["3.13.8", "3.13.11", "3.13.10", "3.13.16"]
     method = METHOD_EXAMINE
 
     def collect(self, ctx: CollectorContext) -> list[Finding]:
@@ -108,6 +108,45 @@ class CryptoConfigCollector(Collector):
                 objective_ids=["3.13.11[a]"], evidence=atrest))
         else:
             findings.append(self._not_met("3.13.11", "No KMS/FIPS crypto config found."))
+
+        # --- 3.13.10: establish and manage cryptographic keys --------------
+        if kms_keys and kms_rot:
+            findings.append(Finding(
+                control_id="3.13.10", status=STATUS_MET, method=METHOD_EXAMINE,
+                summary="Cryptographic keys are established and managed as customer-managed "
+                        "AWS KMS keys with automatic annual rotation, defined in Terraform.",
+                objective_ids=["3.13.10[a]"],
+                evidence=[
+                    Evidence("terraform", f"{KMS}:{kms_keys[0][0]}",
+                             f"{len(kms_keys)} customer-managed KMS key(s) established in IaC."),
+                    Evidence("terraform", f"{KMS}:{kms_rot[0][0]}",
+                             "Key rotation is enabled and managed (annual)."),
+                ]))
+        elif kms_keys:
+            findings.append(Finding(
+                control_id="3.13.10", status=STATUS_PARTIAL, method=METHOD_EXAMINE,
+                summary="KMS keys are established but managed rotation was not confirmed.",
+                objective_ids=["3.13.10[a]"],
+                evidence=[Evidence("terraform", f"{KMS}:{kms_keys[0][0]}", "KMS keys defined.")]))
+        else:
+            findings.append(self._not_met("3.13.10", "No key-management config found."))
+
+        # --- 3.13.16: protect the confidentiality of CUI at rest -----------
+        if storage_enc and kms_keys:
+            findings.append(Finding(
+                control_id="3.13.16", status=STATUS_MET, method=METHOD_EXAMINE,
+                summary="Data at rest is encrypted with customer-managed KMS keys: RDS "
+                        "storage is encrypted, and the same key partitioning covers Secrets "
+                        "Manager, CloudWatch Logs, and S3.",
+                objective_ids=["3.13.16[a]"],
+                evidence=[
+                    Evidence("terraform", f"{RDS}:{storage_enc[0][0]}",
+                             "RDS storage_encrypted=true with a customer-managed KMS key."),
+                    Evidence("terraform", f"{KMS}:{kms_keys[0][0]}",
+                             "Customer-managed KMS keys encrypt storage at rest."),
+                ]))
+        else:
+            findings.append(self._not_met("3.13.16", "No at-rest encryption config found."))
 
         return findings
 
