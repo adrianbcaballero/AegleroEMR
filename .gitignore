@@ -69,6 +69,7 @@ compliance/GOALS.md
 #   python compliance/run.py
 compliance/output/
 compliance/dashboard/data.js
+compliance/dashboard/exports/
 
 # ===== Terraform =====
 *.tfstate
