@@ -8,10 +8,14 @@ from .audit_chain import AuditChainCollector
 from .flaw_remediation import FlawRemediationCollector
 from .access_control import AccessControlCollector
 from .crypto_config import CryptoConfigCollector
+from .aws_live import AwsLiveCollector
 
 ALL_COLLECTORS = [
     AuditChainCollector(),
     FlawRemediationCollector(),
     AccessControlCollector(),
     CryptoConfigCollector(),
+    # Runs AFTER crypto_config so its live TEST evidence merges into (and can flag
+    # drift against) the Terraform EXAMINE evidence. Opt-in via COMPLIANCE_ENABLE_AWS.
+    AwsLiveCollector(),
 ]

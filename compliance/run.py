@@ -34,9 +34,46 @@ def load_catalog() -> dict:
     return json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
 
 
+def _merge_findings(existing, new):
+    """Fold a later collector's finding for the same control into the earlier one.
+
+    TEST (live) evidence corroborates EXAMINE (config) evidence. If a conclusive
+    live TEST disagrees with the config (e.g. Terraform says encrypted but the
+    running resource is not), that is drift -> the control is downgraded and flagged.
+    """
+    from collectors.base import STATUS_MET, STATUS_PARTIAL, STATUS_NOT_MET
+
+    existing.evidence = list(existing.evidence) + list(new.evidence)
+
+    def _labels(*vals):
+        out = []
+        for v in vals:
+            for part in (v or "").split("+"):
+                p = part.strip()
+                if p and p not in out:
+                    out.append(p)
+        return out
+
+    existing.method = " + ".join(_labels(existing.method, new.method))
+    if new.collector and new.collector not in existing.collector:
+        existing.collector = f"{existing.collector}+{new.collector}"
+    for o in new.objective_ids:
+        if o not in existing.objective_ids:
+            existing.objective_ids.append(o)
+
+    if new.status == STATUS_NOT_MET and existing.status in (STATUS_MET, STATUS_PARTIAL):
+        existing.status = STATUS_NOT_MET
+        existing.summary = "DRIFT (live TEST disagrees with configuration): " + new.summary
+    elif new.status == STATUS_MET and existing.status == STATUS_MET:
+        existing.summary = existing.summary + " Confirmed live via TEST method."
+
+    return existing.rehash()
+
+
 def run_collectors(now_iso: str) -> list:
     ctx = CollectorContext(repo_root=REPO_ROOT, now_iso=now_iso)
-    findings = []
+    by_control: dict = {}
+    order: list = []
     for collector in ALL_COLLECTORS:
         try:
             results = collector.collect(ctx)
@@ -45,8 +82,12 @@ def run_collectors(now_iso: str) -> list:
             continue
         for f in results:
             f.finalize(collector.name, now_iso)
-            findings.append(f)
-    return findings
+            if f.control_id in by_control:
+                _merge_findings(by_control[f.control_id], f)
+            else:
+                by_control[f.control_id] = f
+                order.append(f.control_id)
+    return [by_control[cid] for cid in order]
 
 
 def build_report(catalog: dict, findings: list, now_iso: str) -> dict:

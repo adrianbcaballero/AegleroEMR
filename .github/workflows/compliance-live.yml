@@ -1,0 +1,52 @@
+name: Continuous Compliance (Live AWS)
+
+# Verifies controls against the RUNNING AWS account (TEST method) via boto3,
+# using a read-only role assumed through GitHub OIDC - no stored AWS secrets.
+# Runs only when the repo variable AWS_COMPLIANCE_ROLE_ARN is set (i.e. after
+# you apply infra/github_oidc.tf). Uploads the live status as an artifact and
+# fails on a posture regression, but does NOT commit (the daily EXAMINE workflow
+# owns the committed dashboard/evidence).
+on:
+  schedule:
+    - cron: "37 7 * * *"   # daily, offset from the EXAMINE run at 07:17
+  workflow_dispatch:
+
+permissions:
+  id-token: write          # required for GitHub OIDC federation
+  contents: read
+
+jobs:
+  live-assess:
+    name: Live AWS verification (TEST method)
+    runs-on: ubuntu-latest
+    if: ${{ vars.AWS_COMPLIANCE_ROLE_ARN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install boto3
+        run: pip install -r compliance/requirements.txt
+
+      - name: Configure AWS credentials via OIDC (read-only role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_COMPLIANCE_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Run compliance engine with live AWS checks
+        env:
+          COMPLIANCE_ENABLE_AWS: "1"
+          COMPLIANCE_MIN_SPRS: "90"
+        run: |
+          python compliance/run.py
+          python compliance/check_drift.py --new compliance/output/status.json
+
+      - name: Upload live status artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-live-status
+          path: compliance/output/status.json

@@ -63,10 +63,8 @@ class Finding:
     collected_at: str = ""       # ISO-8601 UTC, filled in by the runner
     evidence_hash: str = ""      # SHA-256 over the evidence, filled in by the runner
 
-    def finalize(self, collector_name: str, now_iso: str) -> "Finding":
-        """Stamp provenance fields. Called by the runner after collect()."""
-        self.collector = collector_name
-        self.collected_at = now_iso
+    def rehash(self) -> "Finding":
+        """Recompute the evidence hash (call after mutating evidence, e.g. a merge)."""
         payload = json.dumps(
             [asdict(e) for e in self.evidence],
             sort_keys=True,
@@ -74,6 +72,12 @@ class Finding:
         )
         self.evidence_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         return self
+
+    def finalize(self, collector_name: str, now_iso: str) -> "Finding":
+        """Stamp provenance fields. Called by the runner after collect()."""
+        self.collector = collector_name
+        self.collected_at = now_iso
+        return self.rehash()
 
     def to_dict(self) -> dict:
         d = asdict(self)

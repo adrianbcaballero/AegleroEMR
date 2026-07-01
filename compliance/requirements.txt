@@ -1,0 +1,6 @@
+# The core engine (run.py, all EXAMINE collectors, scorer, generators) uses ONLY
+# the Python standard library - it needs nothing here.
+#
+# boto3 is required only for the OPT-IN live AWS collector (aws_live.py, TEST
+# method), which runs when COMPLIANCE_ENABLE_AWS=1 (the live GitHub Actions job).
+boto3>=1.34
