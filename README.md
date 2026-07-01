@@ -6,12 +6,14 @@
 
 <p align="center">
   Multi-tenant EMR built specifically for residential addiction and behavioral health treatment programs.<br>
-  HIPAA-grade access controls, 42 CFR Part 2 consent management, and a tamper-evident hash-chained audit log.
+  HIPAA-grade access controls, 42 CFR Part 2 consent management, and a tamper-evident hash-chained audit log.<br>
+  Security and continuous compliance are treated as first-class: every control is assessed against NIST 800-171 and crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2.
 </p>
 
 <p align="center">
   <a href="https://www.aeglero.com">aeglero.com</a> &middot;
   <a href="https://democlinic.aeglero.com">democlinic.aeglero.com</a> (available on request) &middot;
+  <a href="https://compliance.aeglero.com">compliance.aeglero.com</a> (available on request) &middot;
   <a href="ARCHITECTURE.md">Architecture</a> &middot;
   <a href="SECURITY.md">Security</a>
 </p>
@@ -77,6 +79,8 @@ For the multi-tenancy model, auth flow, permission system, and audit-log integri
 
 Three-tier subnet isolation enforces network boundaries — public for the ALB, private for ECS Fargate, isolated (with no internet route) for RDS. Four customer-managed KMS keys with annual rotation cover RDS, Secrets Manager, CloudWatch Logs, and S3. A SHA-256 hash-chained audit log lives in the database, with each entry referencing the previous entry's hash so any modification is mathematically detectable (ONC §170.315(d)(2)). CloudTrail, WAF, and GuardDuty are controlled by production feature flags, and every CI pipeline run gates merges on Bandit, pip-audit, Trivy, and Checkov scans.
 
+Beyond the built-in controls, a continuous compliance engine ([`compliance/`](compliance/README.md)) assesses the running system against all 110 NIST SP 800-171 controls, computes an SPRS score, and auto-generates a System Security Plan and Plan of Action and Milestones. Every control is crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2, and the assessment runs on a schedule with drift detection. The live dashboard is at [compliance.aeglero.com](https://compliance.aeglero.com) (available on request).
+
 For the full control catalog mapped to HIPAA §164.312 and 42 CFR Part 2, see [SECURITY.md](SECURITY.md).
 
 ## Key features
@@ -128,6 +132,7 @@ For the full control catalog mapped to HIPAA §164.312 and 42 CFR Part 2, see [S
 - Hardened response headers (HSTS, CSP, X-Frame-Options DENY, X-Content-Type-Options nosniff, Cache-Control no-store)
 - Strong password policy (12+ chars, mixed case, digits, special) with Werkzeug scrypt hashing
 - Account lockout after 5 failed logins. Permanent lock kills all active sessions instantly
+- Continuous compliance engine mapping all 110 NIST SP 800-171 controls (crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2), with automated evidence collection, SPRS scoring, and auto-generated SSP and POA&M
 
 See [SECURITY.md](SECURITY.md) for the full controls list and HIPAA Security Rule mapping.
 
@@ -135,6 +140,7 @@ See [SECURITY.md](SECURITY.md) for the full controls list and HIPAA Security Rul
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** for the deep dive: multi-tenancy model, auth flow, permission model, audit-log integrity, deployment topology
 - **[SECURITY.md](SECURITY.md)** for the security policy: vulnerability reporting, technical controls catalogue, HIPAA Security Rule §164.312 mapping, ONC certification criteria, 42 CFR Part 2 alignment
+- **[compliance/](compliance/README.md)** for the continuous compliance subsystem: NIST 800-171 assessment, automated evidence collection, SPRS scoring, auto-generated SSP and POA&M, and a multi-framework crosswalk
 - **[aeglero.com](https://www.aeglero.com)** for product features, screenshots, learning videos, and contact
 
 ## Project structure
@@ -155,6 +161,7 @@ AegleroEMR/
 ├── infra/               Terraform
 │   ├── bootstrap/       one-time state backend setup
 │   └── *.tf             main stack
+├── compliance/          continuous compliance engine (NIST 800-171, SPRS, SSP/POA&M)
 ├── ARCHITECTURE.md      deep-dive on system design
 └── SECURITY.md          security policy and HIPAA mapping
 ```
