@@ -217,6 +217,47 @@ Don't forget the invalidation. Frontend syncs without one will look like nothing
 
 **Infra changes** — `terraform plan` to review, then `terraform apply`.
 
+## Compliance dashboard (compliance.aeglero.com)
+
+The continuous-compliance dashboard is hosted by the same Terraform but is independent of the EMR app: a private S3 bucket (`aeglero-emr-compliance-dashboard`) behind its own CloudFront distribution via Origin Access Control, reusing the wildcard ACM cert and the security-headers policy. It serves non-sensitive demonstration content (no PHI, no secrets), so it is public and unauthenticated. See [compliance_dashboard.tf](compliance_dashboard.tf).
+
+Two GitHub OIDC roles support it, both assumed at runtime with no stored AWS keys:
+
+| Role | Defined in | Grants |
+|---|---|---|
+| `aeglero-compliance-readonly` | [github_oidc.tf](github_oidc.tf) | Describe-only APIs for the optional live AWS collector |
+| `aeglero-compliance-deploy` | [github_oidc_deploy.tf](github_oidc_deploy.tf) | S3 write to the dashboard bucket + CloudFront invalidation, trust scoped to the `main` branch |
+
+It can be brought up on its own, **without** the EMR backend, with a targeted apply:
+
+```bash
+cd infra
+terraform apply \
+  -target=aws_route53_record.compliance_dashboard \
+  -target=aws_route53_record.compliance_dashboard_ipv6 \
+  -target=aws_s3_bucket_policy.compliance_dashboard \
+  -target=aws_s3_bucket_versioning.compliance_dashboard \
+  -target=aws_s3_bucket_server_side_encryption_configuration.compliance_dashboard \
+  -target=aws_s3_bucket_public_access_block.compliance_dashboard \
+  -target=aws_s3_object.compliance_index \
+  -target=aws_s3_object.compliance_data \
+  -target=aws_s3_object.compliance_logo \
+  -target=aws_s3_object.compliance_ai_review \
+  -target=aws_iam_role_policy.compliance_deploy \
+  -target=aws_iam_role_policy.compliance_readonly
+```
+
+The apply uploads the current dashboard files and prints the deploy role ARN and distribution id as outputs. From then on the weekly `.github/workflows/dashboard-deploy.yml` workflow regenerates the assessment plus the AI review and re-publishes the site on its own, driven by these repo settings:
+
+| Setting | Kind | Value / source |
+|---|---|---|
+| `AWS_COMPLIANCE_DEPLOY_ROLE_ARN` | variable | terraform output `compliance_deploy_role_arn` |
+| `COMPLIANCE_DISTRIBUTION_ID` | variable | terraform output `compliance_distribution_id` |
+| `AWS_REGION` | variable | `us-east-2` |
+| `ANTHROPIC_API_KEY` | secret | API key for the AI review step (skipped if unset) |
+
+The compliance subsystem itself (the engine, collectors, and dashboard content) is documented in [../compliance/README.md](../compliance/README.md).
+
 ## Tearing down
 
 ```bash

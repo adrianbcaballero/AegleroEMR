@@ -11,6 +11,12 @@ The approach is "compliance as code". Evidence is gathered by small, testable co
 that read the actual application source, infrastructure, and CI configuration, so each
 control status links back to the specific line of code or config that supports it.
 
+The live dashboard at [compliance.aeglero.com](https://compliance.aeglero.com):
+
+<p align="center">
+  <img src="../assets/compliance-dashboard.png" alt="Continuous compliance dashboard: SPRS gauge, control list, and framework switcher" width="90%">
+</p>
+
 ## What it produces
 
 One command runs the whole pipeline and writes four things:
@@ -22,7 +28,9 @@ One command runs the whole pipeline and writes four things:
 - `output/POAM.md` and `output/POAM.csv` are the Plan of Action and Milestones: the open
   items with milestone dates.
 - `dashboard/data.js` feeds `dashboard/index.html`, a self-contained page with an SPRS
-  gauge, a browsable control list, and a framework switcher.
+  gauge, a browsable control list, and a framework switcher (the Controls tab), plus a
+  read-only AI Review tab fed by `dashboard/ai_review.js` (see AI evidence review below).
+  The page is published live at https://compliance.aeglero.com.
 
 ## How it works
 
@@ -57,29 +65,57 @@ disposition that states plainly how it is satisfied:
 
 | Disposition | Meaning | Count |
 |---|---|---|
-| Implemented (automated) | Proven now by a collector that reads source, infra, or CI | 14 |
-| Attested | Implemented in the application; a collector for it is a roadmap item | 46 |
-| Policy | Satisfied by an organizational policy or process document | 22 |
-| Inherited | Provided by the cloud platform (AWS), evidenced by its attestations | 13 |
+| Implemented (automated) | Proven now by a collector that reads source, infra, or CI | 22 |
+| Attested | Implemented in the application; a collector for it is a roadmap item | 39 |
+| Policy | Satisfied by an organizational policy or process document | 17 |
+| Inherited | Provided by the cloud platform (AWS), evidenced by its attestations | 12 |
 | Not applicable | Out of scope for this system, with a stated rationale | 15 |
+| Not met (gap) | Required but not yet in place (training and personnel policies), tracked in the POA&M | 5 |
 
-Current posture is SPRS 105 of 110, with about 17 percent of applicable controls verified
-automatically. That automated share is designed to grow over time: adding a collector for
-an Attested control moves it to Implemented and raises the coverage number.
+Current posture is SPRS 91 of 110, with about 27 percent (22 of 83 applicable controls)
+verified automatically. That automated share is designed to grow over time: adding a
+collector for an Attested control moves it to Implemented and raises the coverage number.
 
 ## Collectors
 
 | Collector | Method | Area |
 |---|---|---|
-| `audit_chain` | Examine | Audit generation, traceability, tamper-evidence (3.3.x) |
+| `audit_chain` | Examine | Audit generation, traceability, tamper-evident hash chain (3.3.x) |
 | `access_control` | Examine | Authentication, RBAC, MFA (3.1.x, 3.5.3) |
+| `identity_hardening` | Examine | Session, credential, and least-privilege hardening (3.1.8, 3.1.11, 3.5.7) |
 | `flaw_remediation` | Examine | Vulnerability scanning and merge gating in CI (3.11.2, 3.14.1) |
 | `crypto_config` | Examine | Encryption in transit and at rest, read from Terraform (3.13.x) |
+| `network_config` | Examine | Boundary protection and subnet isolation, read from Terraform (3.13.1, 3.13.5, 3.13.6) |
 | `self_assessment` | Examine | The engine itself satisfies the assessment family (3.12.x) |
 | `aws_live` | Test | Optional live check of the running AWS account (opt-in) |
 
 Adding a collector is the primary extension point. Implement a `Collector` subclass that
 returns findings for one or more controls, then register it in `collectors/__init__.py`.
+
+## AI evidence review
+
+An optional, advisory reviewer (`ai_review.py`) gives each automated control a second,
+independent read. For a control, it sends the collected evidence and the exact code
+excerpts that evidence cites to a language model, which judges whether the evidence
+supports the control and flags gaps. It is advisory only: it never changes a control
+status or the SPRS score. A payload allowlist and a secret scrubber run before any model
+call, so whole files, credentials, and secrets are never sent.
+
+The reviewer is opt-in and off by default. A dry run (`--dry-run`) builds and scrubs the
+payloads and prints exactly what would be sent, with no API call; a live run needs an API
+key. Its output feeds the read-only AI Review tab on the dashboard, which shows the engine
+verdict next to the AI verdict for each control and surfaces any disagreements. A separate
+narrative mode drafts SSP implementation statements that a human must approve (`--approve`)
+before the generator will use them.
+
+The threat model, data-minimization design, and provider governance for this feature are
+documented in [docs/ai-evidence-review.md](docs/ai-evidence-review.md).
+
+The AI Review tab, showing the engine verdict beside the AI verdict and any disagreements:
+
+<p align="center">
+  <img src="../assets/compliance-ai-review.png" alt="AI Review tab: advisory AI verdicts next to the engine verdict, with flagged gaps" width="90%">
+</p>
 
 ## Frameworks
 
@@ -92,8 +128,14 @@ views, showing each control by its framework reference next to its NIST 800-171 
 | NIST SP 800-171 Rev 2 | 110 |
 | CMMC Level 2 | 110 |
 | HIPAA Security Rule | 36 |
-| ONC Health IT Certification | 16 |
+| ONC Health IT Certification | 15 |
 | 42 CFR Part 2 | 6 |
+
+Switching the dashboard to another framework re-labels each control by that framework's reference:
+
+<p align="center">
+  <img src="../assets/compliance-framework-switch.png" alt="Dashboard framework switcher showing controls relabeled by a non-NIST framework reference" width="90%">
+</p>
 
 ## Continuous operation
 
@@ -103,6 +145,19 @@ SPRS score falls below a threshold or a control regresses. The regression and th
 logic lives in `check_drift.py`. A second workflow runs the optional live AWS checks
 through a read-only role assumed via GitHub OIDC, so no cloud credentials are stored.
 
+A third workflow (`.github/workflows/dashboard-deploy.yml`) runs weekly: it re-runs the
+assessment and the AI review, then publishes the refreshed dashboard to the live site at
+https://compliance.aeglero.com (a private S3 bucket behind CloudFront) and invalidates the
+CDN cache. It uses a separate write-scoped role assumed via GitHub OIDC, so again no cloud
+credentials are stored. The hosting and roles are described in
+[../infra/README.md](../infra/README.md).
+
+A weekly `dashboard-deploy` run assessing, AI-reviewing, and publishing the site end to end:
+
+<p align="center">
+  <img src="../assets/compliance-deploy-run.png" alt="GitHub Actions run: assess, AI review, assume deploy role, sync to S3, and invalidate CloudFront, all passing" width="80%">
+</p>
+
 ## Layout
 
 ```
@@ -111,11 +166,14 @@ compliance/
   scorer.py              SPRS scoring
   generate_docs.py       SSP, POA&M, and dashboard feed
   check_drift.py         drift detection and score gate
+  ai_review.py           optional advisory AI evidence reviewer (opt-in)
   catalog/
     build_catalog.py     builds controls.json
     controls.json        the 110-control catalog (generated)
   collectors/            evidence collectors
-  dashboard/             self-contained dashboard (index.html)
+  dashboard/             self-contained dashboard (index.html, data.js, ai_review.js)
+  docs/
+    ai-evidence-review.md  AI reviewer design, threat model, and governance
   output/                generated artifacts (regenerated each run)
   references/
     SOURCES.md           authoritative source for every framework and mapping

@@ -7,7 +7,7 @@
 <p align="center">
   Multi-tenant EMR built specifically for residential addiction and behavioral health treatment programs.<br>
   HIPAA-grade access controls, 42 CFR Part 2 consent management, and a tamper-evident hash-chained audit log.<br>
-  Security and continuous compliance are treated as first-class: every control is assessed against NIST 800-171 and crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2.
+  Security and continuous compliance are treated as first-class: every control is assessed against NIST 800-171, crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2, and independently reviewed by an advisory AI agent.
 </p>
 
 <p align="center">
@@ -134,7 +134,7 @@ For the full control catalog mapped to HIPAA §164.312 and 42 CFR Part 2, see [S
 - Hardened response headers (HSTS, CSP, X-Frame-Options DENY, X-Content-Type-Options nosniff, Cache-Control no-store)
 - Strong password policy (12+ chars, mixed case, digits, special) with Werkzeug scrypt hashing
 - Account lockout after 5 failed logins. Permanent lock kills all active sessions instantly
-- Continuous compliance engine mapping all 110 NIST SP 800-171 controls (crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2), with automated evidence collection, SPRS scoring, and auto-generated SSP and POA&M
+- Continuous compliance engine mapping all 110 NIST SP 800-171 controls (crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2), with automated evidence collection, SPRS scoring, auto-generated SSP and POA&M, an advisory AI evidence reviewer, and a live self-updating dashboard at [compliance.aeglero.com](https://compliance.aeglero.com)
 
 See [SECURITY.md](SECURITY.md) for the full controls list and HIPAA Security Rule mapping.
 
@@ -142,7 +142,7 @@ See [SECURITY.md](SECURITY.md) for the full controls list and HIPAA Security Rul
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** for the deep dive: multi-tenancy model, auth flow, permission model, audit-log integrity, deployment topology
 - **[SECURITY.md](SECURITY.md)** for the security policy: vulnerability reporting, technical controls catalogue, HIPAA Security Rule §164.312 mapping, ONC certification criteria, 42 CFR Part 2 alignment
-- **[compliance/](compliance/README.md)** for the continuous compliance subsystem: NIST 800-171 assessment, automated evidence collection, SPRS scoring, auto-generated SSP and POA&M, and a multi-framework crosswalk
+- **[compliance/](compliance/README.md)** for the continuous compliance subsystem: NIST 800-171 assessment, automated evidence collection, SPRS scoring, auto-generated SSP and POA&M, a multi-framework crosswalk, and an advisory AI evidence reviewer
 - **[aeglero.com](https://www.aeglero.com)** for product features, screenshots, learning videos, and contact
 
 ## Project structure
