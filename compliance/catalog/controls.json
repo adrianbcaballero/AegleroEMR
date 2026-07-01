@@ -1,0 +1,119 @@
+{
+  "framework": "NIST SP 800-171 Rev 2",
+  "scoring_model": "DoD Assessment Methodology (SPRS), base score 110",
+  "notes": [
+    "sprs_weight is the number of points DEDUCTED from 110 when a control is not met, per the DoD Assessment Methodology (values are 1, 3, or 5).",
+    "This catalog is a SEED subset covering the controls Aeglero addresses today. It is expanded toward the full 110 controls over time; see GOALS.md / the generated POA&M.",
+    "Objectives use the [a],[b],[c] determination-statement style from NIST SP 800-171A.",
+    "assessment_method values follow 800-171A: EXAMINE, TEST, INTERVIEW."
+  ],
+  "controls": [
+    {
+      "id": "3.3.1",
+      "family": "AU",
+      "family_name": "Audit and Accountability",
+      "title": "Create and retain system audit logs and records to the extent needed to enable the monitoring, analysis, investigation, and reporting of unlawful or unauthorized system activity.",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.3.1[a]", "text": "audit logs needed to enable monitoring, analysis, investigation, and reporting are specified." },
+        { "id": "3.3.1[e]", "text": "audit logs are created (generated)." },
+        { "id": "3.3.1[f]", "text": "audit logs are retained." }
+      ]
+    },
+    {
+      "id": "3.3.2",
+      "family": "AU",
+      "family_name": "Audit and Accountability",
+      "title": "Ensure that the actions of individual system users can be uniquely traced to those users, so they can be held accountable for their actions.",
+      "sprs_weight": 3,
+      "objectives": [
+        { "id": "3.3.2[a]", "text": "the content of audit records needed to support the ability to uniquely trace users to their actions is defined." },
+        { "id": "3.3.2[b]", "text": "audit records, once created, contain the defined content." }
+      ]
+    },
+    {
+      "id": "3.3.8",
+      "family": "AU",
+      "family_name": "Audit and Accountability",
+      "title": "Protect audit information and audit logging tools from unauthorized access, modification, and deletion.",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.3.8[b]", "text": "audit information is protected from unauthorized modification." },
+        { "id": "3.3.8[c]", "text": "audit information is protected from unauthorized deletion." }
+      ]
+    },
+    {
+      "id": "3.1.1",
+      "family": "AC",
+      "family_name": "Access Control",
+      "title": "Limit system access to authorized users, processes acting on behalf of authorized users, and devices (including other systems).",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.1.1[e]", "text": "system access is limited to authorized users." }
+      ]
+    },
+    {
+      "id": "3.1.2",
+      "family": "AC",
+      "family_name": "Access Control",
+      "title": "Limit system access to the types of transactions and functions that authorized users are permitted to execute.",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.1.2[b]", "text": "system access is limited to the defined types of transactions and functions for authorized users." }
+      ]
+    },
+    {
+      "id": "3.5.3",
+      "family": "IA",
+      "family_name": "Identification and Authentication",
+      "title": "Use multifactor authentication for local and network access to privileged accounts and for network access to non-privileged accounts.",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.5.3[b]", "text": "multifactor authentication is implemented for network access to privileged accounts." },
+        { "id": "3.5.3[e]", "text": "multifactor authentication is implemented for network access to non-privileged accounts." }
+      ]
+    },
+    {
+      "id": "3.13.8",
+      "family": "SC",
+      "family_name": "System and Communications Protection",
+      "title": "Implement cryptographic mechanisms to prevent unauthorized disclosure of CUI during transmission unless otherwise protected by alternative physical safeguards.",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.13.8[c]", "text": "cryptographic mechanisms intended to prevent unauthorized disclosure of information during transmission are implemented." }
+      ]
+    },
+    {
+      "id": "3.13.11",
+      "family": "SC",
+      "family_name": "System and Communications Protection",
+      "title": "Employ FIPS-validated cryptography when used to protect the confidentiality of CUI.",
+      "sprs_weight": 3,
+      "objectives": [
+        { "id": "3.13.11[a]", "text": "FIPS-validated cryptography is employed to protect the confidentiality of CUI." }
+      ]
+    },
+    {
+      "id": "3.14.1",
+      "family": "SI",
+      "family_name": "System and Information Integrity",
+      "title": "Identify, report, and correct system flaws in a timely manner.",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.14.1[b]", "text": "system flaws are reported." },
+        { "id": "3.14.1[c]", "text": "system flaws are corrected in a timely manner." }
+      ]
+    },
+    {
+      "id": "3.11.2",
+      "family": "RA",
+      "family_name": "Risk Assessment",
+      "title": "Scan for vulnerabilities in organizational systems and applications periodically and when new vulnerabilities affecting those systems and applications are identified.",
+      "sprs_weight": 5,
+      "objectives": [
+        { "id": "3.11.2[a]", "text": "the frequency to scan for vulnerabilities is defined." },
+        { "id": "3.11.2[d]", "text": "vulnerabilities are scanned for when new vulnerabilities are identified." }
+      ]
+    }
+  ]
+}

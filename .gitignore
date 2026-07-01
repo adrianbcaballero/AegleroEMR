@@ -52,6 +52,11 @@ dbdata/
 # ===== Private internal scripts / demo data =====
 backend/scripts/_private/
 
+# ===== Private planning docs & Claude Code local settings (not public) =====
+# The compliance SUBSYSTEM is public; only the internal planning doc is hidden.
+compliance/GOALS.md
+.claude/
+
 # ===== Terraform =====
 *.tfstate
 *.tfstate.*
