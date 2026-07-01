@@ -101,8 +101,20 @@ def _milestone(generated_at: str, status: str) -> str:
 
 
 # --------------------------------------------------------------------------- SSP
+APPROVED_PATH = HERE / "approved_narratives.json"
+
+
+def _load_approved() -> dict:
+    """Human-approved AI narratives, keyed by control id. Empty if none."""
+    try:
+        return json.loads(APPROVED_PATH.read_text(encoding="utf-8")).get("narratives", {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
 def render_ssp(report: dict, profile: dict) -> str:
     s = report["summary"]
+    approved = _load_approved()
     lines: list[str] = []
     a = lines.append
 
@@ -156,7 +168,12 @@ def render_ssp(report: dict, profile: dict) -> str:
             objs = ", ".join(f.get("objective_ids", [])) or "-"
             a(f"- **Objectives addressed:** {objs}")
             a("")
-            a(f"**Implementation statement.** {f.get('summary', '')}")
+            appr = approved.get(c["id"])
+            if appr:
+                a(f"**Implementation statement** (drafted with AI assistance, reviewed "
+                  f"and approved {appr.get('approved_at', '')}). {appr['statement']}")
+            else:
+                a(f"**Implementation statement.** {f.get('summary', '')}")
             a("")
             ev = f.get("evidence", [])
             if ev:

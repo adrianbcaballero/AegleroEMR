@@ -38,6 +38,9 @@ OUT_JSON = HERE / "output" / "ai_review.json"
 OUT_MD = HERE / "output" / "ai_review.md"
 OUT_NARR_JSON = HERE / "output" / "ai_narratives.json"
 OUT_NARR_MD = HERE / "output" / "ai_narratives.md"
+# Human-approved narratives (committed, tracked). Populated only via --approve after
+# a person reviews the draft. The SSP generator uses these; raw drafts above do not.
+APPROVED_PATH = HERE / "approved_narratives.json"
 
 MODEL = os.environ.get("COMPLIANCE_AI_MODEL", "claude-opus-4-8")
 NARRATIVE_MODEL = os.environ.get("COMPLIANCE_AI_NARRATIVE_MODEL", "claude-sonnet-5")
@@ -395,6 +398,37 @@ def render_narratives(results: list[dict], dry_run: bool) -> str:
     return "\n".join(lines) + "\n"
 
 
+def approve(control_id: str) -> int:
+    """Promote a reviewed draft narrative into the committed approved file (human gate).
+
+    This is a deliberate human action taken after reading the draft in ai_narratives.md.
+    It does not call any model; it copies the reviewed text into approved_narratives.json,
+    which the SSP generator then uses.
+    """
+    if not OUT_NARR_JSON.exists():
+        print("No draft narratives found; run `--mode narrative` first.")
+        return 2
+    drafts = json.loads(OUT_NARR_JSON.read_text(encoding="utf-8")).get("results", [])
+    match = next((r for r in drafts if r.get("control_id") == control_id), None)
+    if not match or not match.get("implementation_statement"):
+        print(f"No draft narrative for {control_id} in {OUT_NARR_JSON.name}.")
+        return 2
+
+    approved = {"narratives": {}}
+    if APPROVED_PATH.exists():
+        approved = json.loads(APPROVED_PATH.read_text(encoding="utf-8"))
+    approved.setdefault("narratives", {})[control_id] = {
+        "statement": match["implementation_statement"],
+        "approved_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "source_model": match["provenance"]["model"],
+        "evidence_sha256": match["provenance"]["evidence_sha256"],
+    }
+    APPROVED_PATH.write_text(json.dumps(approved, indent=2) + "\n", encoding="utf-8")
+    print(f"Approved narrative for {control_id}. Wrote {APPROVED_PATH.relative_to(REPO_ROOT)}.")
+    print("It will appear in the SSP on the next `python compliance/run.py`.")
+    return 0
+
+
 def _select(controls: list[dict], only: str | None) -> list[dict]:
     if only:
         return [c for c in controls if c["id"] == only]
@@ -408,7 +442,13 @@ def main() -> int:
     ap.add_argument("--dry-run", action="store_true",
                     help="build and scrub payloads, print what would be sent, no API call")
     ap.add_argument("--control", help="target a single control id, e.g. 3.3.8")
+    ap.add_argument("--approve", metavar="CONTROL",
+                    help="human gate: promote the reviewed draft narrative for a control "
+                         "into approved_narratives.json (no model call)")
     args = ap.parse_args()
+
+    if args.approve:
+        return approve(args.approve)
     is_narr = args.mode == "narrative"
 
     if os.environ.get("COMPLIANCE_ENABLE_AI", "1").lower() not in ENABLED and not args.dry_run:
