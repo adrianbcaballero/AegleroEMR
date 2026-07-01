@@ -25,7 +25,10 @@ The `[a]`,`[b]`,`[c]` determination statements graded during an assessment.
 - Publication: https://csrc.nist.gov/pubs/sp/800/171/a/final
 
 ### DoD Assessment Methodology (SPRS scoring)
-The −1 / −3 / −5 point weights per control used to compute the SPRS score from 110.
+The 1 / 3 / 5 point weights per control used to compute the SPRS score from 110. The
+catalog's `sprs_weight` values are taken from **Annex A (Scoring Template)** of this
+document (v1.2.1). 3.5.3 and 3.13.11 carry 3-to-5 partial-credit rules; 3.12.4 is NA.
+- Authoritative PDF (v1.2.1, June 24 2020): https://www.acq.osd.mil/asda/dpc/cp/cyber/docs/safeguarding/NIST-SP-800-171-Assessment-Methodology-Version-1.2.1-6.24.2020.pdf
 - DoD Procurement Toolbox: https://dodprocurementtoolbox.com/site-pages/nist-sp-800-171
 - DPC Safeguarding page: https://www.acq.osd.mil/asda/dpc/cp/cyber/safeguarding.html
 
