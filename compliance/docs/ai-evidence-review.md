@@ -99,7 +99,7 @@ control metadata and code references, not patient data.
 | LLM06 Excessive agency | Yes | Least privilege and advisory-only. The module cannot import the scorer or catalog writers, cannot write outside its one output file, and has a mandatory human approval gate. |
 | LLM07 System prompt leakage | Yes | The system prompt contains no secrets or sensitive data, so leakage carries no confidentiality impact. |
 | LLM08 Vector and embedding weaknesses | Not applicable | No retrieval, vector store, or embeddings are used. |
-| LLM09 Misinformation | Yes | Grounding prompt with cite-or-insufficient, temperature 0, schema validation, and a human review gate. Verdicts are suggested, never authoritative. |
+| LLM09 Misinformation | Yes | Grounding prompt with cite-or-insufficient, schema validation, and a human review gate. Verdicts are suggested, never authoritative. |
 | LLM10 Unbounded consumption | Yes | Opt-in only, with hard caps on controls per run, per-call timeout, retry with backoff, and a token budget guard that halts the run. |
 
 ### 6.2 NIST AI Risk Management Framework 1.0
@@ -112,7 +112,7 @@ control metadata and code references, not patient data.
 | GOVERN 6.1 and 6.2 Third-party and contingency for third-party failure | Yes | Pinned model provider, recorded model id, and graceful degradation if the provider is unavailable. |
 | MAP 1.1 Intended purpose and context established | Yes | Purpose, scope, and out-of-scope stated. |
 | MAP 4.1 Third-party risks mapped | Yes | Model provider dependency and data-sharing risk documented. |
-| MEASURE 2.5 Validity and reliability | Yes | Temperature 0, model pinning, and reproducible advisory records. |
+| MEASURE 2.5 Validity and reliability | Yes | Model pinning plus a recorded prompt hash and evidence hash per review, giving reproducible advisory records. |
 | MEASURE 2.7 Security and resilience | Yes | Prompt-injection handling, least privilege, scrubber, and fail-safe behavior. |
 | MEASURE 2.8 Transparency and accountability | Yes | Every output labeled AI-generated with model id, prompt hash, evidence hash, and timestamp. |
 | MEASURE 2.10 Privacy | Yes | Data minimization and scrubber; no PHI in scope. |
