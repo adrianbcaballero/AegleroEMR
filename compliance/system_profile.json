@@ -21,9 +21,11 @@
   "applicable_laws": [
     "HIPAA Security Rule (45 CFR Part 164)",
     "42 CFR Part 2 (Confidentiality of Substance Use Disorder Patient Records)",
-    "NIST SP 800-171 Rev 2 (assessment framework applied in this plan)",
-    "ONC Health IT Certification criteria (45 CFR 170.315)",
-    "CMMC Level 2 (crosswalk reference)"
+    "ONC Health IT Certification criteria (45 CFR 170.315)"
   ],
+  "guidance": [
+    "NIST SP 800-66 Rev 2 (Implementing the HIPAA Security Rule: A Cybersecurity Resource Guide)"
+  ],
+  "assessment_framework_note": "Aeglero's binding obligations are the laws and regulations listed above. NIST SP 800-171 Rev 2 is not itself a legal requirement for this system (Aeglero processes PHI, not federal CUI); it is used as the assessment framework because it is rigorous and quantifiable (SPRS-scored) and its control set crosswalks cleanly to HIPAA, ONC, CMMC, and 42 CFR Part 2. Using 800-171 as the common spine demonstrates compliance automation that maps a single control set across multiple frameworks and industries.",
   "assessment_scope_note": "Aeglero is a HIPAA-scoped healthcare system; its real regulatory obligation is HIPAA + 42 CFR Part 2. This document maps Aeglero's existing controls to NIST SP 800-171 Rev 2 to DEMONSTRATE continuous-compliance automation. Aeglero is not a federal CUI system and this is not an official assessment artifact."
 }

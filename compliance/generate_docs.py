@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import oscal
+import ssp_docx
 
 HERE = Path(__file__).resolve().parent
 OUTPUT_DIR = HERE / "output"
@@ -175,12 +176,25 @@ def render_ssp(report: dict, profile: dict) -> str:
     a(profile["authorization_boundary"])
     a("")
 
-    # ---- 4. Applicable laws, regulations, and policies ----------------------
-    a("## 4. Applicable laws, regulations, and policies")
+    # ---- 4. Applicable laws, regulations, and guidance ----------------------
+    a("## 4. Applicable laws, regulations, and guidance")
+    a("")
+    a("**Binding laws and regulations.**")
     a("")
     for law in profile.get("applicable_laws", []) or ["Not specified."]:
         a(f"- {law}")
     a("")
+    guidance = profile.get("guidance", [])
+    if guidance:
+        a("**Referenced guidance.**")
+        a("")
+        for g in guidance:
+            a(f"- {g}")
+        a("")
+    note = profile.get("assessment_framework_note")
+    if note:
+        a(f"**Assessment framework.** {note}")
+        a("")
 
     # ---- 5. Control implementation summary ----------------------------------
     a("## 5. Control implementation summary")
@@ -356,9 +370,15 @@ def generate(report: dict | None = None) -> list[Path]:
     # Standard machine-readable exports: OSCAL SSP + POA&M.
     oscal_paths = oscal.generate(report, profile, rows)
 
+    # Word SSP (optional: only if python-docx is installed).
+    docx_path = ssp_docx.build(report, profile)
+
     # Stage the downloadable bundle next to the dashboard for the export panel.
     EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    for src in [SSP_PATH, POAM_PATH, POAM_CSV_PATH, *oscal_paths]:
+    exportable = [SSP_PATH, POAM_PATH, POAM_CSV_PATH, *oscal_paths]
+    if docx_path:
+        exportable.append(docx_path)
+    for src in exportable:
         shutil.copyfile(src, EXPORTS_DIR / src.name)
 
     # Emit the report as a JS global so dashboard/index.html can load it from
@@ -374,7 +394,8 @@ def generate(report: dict | None = None) -> list[Path]:
         "window.COMPLIANCE_STATUS = " + json.dumps(report_for_js, indent=2) + ";\n",
         encoding="utf-8",
     )
-    return [SSP_PATH, POAM_PATH, POAM_CSV_PATH, *oscal_paths, DASHBOARD_DATA_PATH]
+    return [SSP_PATH, POAM_PATH, POAM_CSV_PATH, *oscal_paths,
+            *( [docx_path] if docx_path else [] ), DASHBOARD_DATA_PATH]
 
 
 def main() -> int:
