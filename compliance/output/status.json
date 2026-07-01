@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-01T07:38:32+00:00",
+  "generated_at": "2026-07-01T08:04:13+00:00",
   "framework": "NIST SP 800-171 Rev 2",
   "scoring_model": "DoD Assessment Methodology (SPRS), base score 110",
   "summary": {
@@ -49,7 +49,7 @@
           "3.3.1[f]"
         ],
         "collector": "audit_chain",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "f44ccc756422e990d90db7754db655b5445a7229fbabc0130fe7245abfff8311"
       }
     },
@@ -77,7 +77,7 @@
           "3.3.2[b]"
         ],
         "collector": "audit_chain",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "3041c5b18177bd668cd72539c862fcb13209630f70b6805d298e96d5da3c832f"
       }
     },
@@ -115,7 +115,7 @@
           "3.3.8[c]"
         ],
         "collector": "audit_chain",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "7e1ab282570bf134086265d971dbaf722f5bb6d65617ca09be6f92bee8c7b473"
       }
     },
@@ -142,7 +142,7 @@
           "3.1.1[e]"
         ],
         "collector": "access_control",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "c052f0e419b984d466166797991efc9b9c7009f692386f9ad654eb59b9078dea"
       }
     },
@@ -174,7 +174,7 @@
           "3.1.2[b]"
         ],
         "collector": "access_control",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "e03f1d4c6bf4772c036383d4e24596ed4de2691f8226ba1ca4f900b1a8c0bb2a"
       }
     },
@@ -207,7 +207,7 @@
           "3.5.3[e]"
         ],
         "collector": "access_control",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "3f070c86830d53df67302643edf23d6143dd603c3a20974a32c796a73c0e5477"
       }
     },
@@ -249,7 +249,7 @@
           "3.13.8[c]"
         ],
         "collector": "crypto_config",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "2136645358e39391e3ab8a11eee4924e3a79e97531158c11a090bdaecc8e9f83"
       }
     },
@@ -286,7 +286,7 @@
           "3.13.11[a]"
         ],
         "collector": "crypto_config",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "9ad52e2681f2b5bce8d73db0981fdc48e0a3f8a8e5d1959fefa4013c6143b8d4"
       }
     },
@@ -319,7 +319,7 @@
           "3.14.1[c]"
         ],
         "collector": "flaw_remediation",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "3f153b6b1e8f5801eacdc225dba7cf952d9ba9eca384f2fa489fde367154ae62"
       }
     },
@@ -351,7 +351,7 @@
           "3.11.2[a]"
         ],
         "collector": "flaw_remediation",
-        "collected_at": "2026-07-01T07:38:32+00:00",
+        "collected_at": "2026-07-01T08:04:13+00:00",
         "evidence_hash": "db60d2bac5b02da87f68f7ca18f0e6f8add4ba242e9928450a2b6cd09a85f07e"
       }
     }
