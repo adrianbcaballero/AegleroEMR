@@ -151,8 +151,11 @@ resource "aws_cloudfront_distribution" "compliance_dashboard" {
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
 
-    # CachingDisabled - the dashboard updates frequently; always serve fresh.
-    cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    # CachingOptimized (AWS managed) - edge-cache the static assets so repeated or
+    # abusive requests are absorbed at the CloudFront edge instead of hitting S3,
+    # bounding origin load and cost. The dashboard-deploy workflow runs a CloudFront
+    # invalidation on every publish, so new content still appears immediately.
+    cache_policy_id            = "658327ea-f89d-4fab-a63d-7e88639e58f6"
     response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
   }
 
