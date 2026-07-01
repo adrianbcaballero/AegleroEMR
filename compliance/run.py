@@ -113,6 +113,10 @@ def _disposition_finding(ctrl: dict, now_iso: str) -> dict:
     elif ctype in ("policy", "manual"):
         status, method = "policy", "POLICY"
         summary = rationale or "Satisfied by organizational policy/procedure (see docs/policies/)."
+    elif ctype == "gap":
+        status, method = "not-met", None
+        summary = ("Not yet implemented: the required policy, procedure, or documentation "
+                   "is not in place. Open POA&M item.")
     elif ctype == "na":
         status, method = "na", "N/A"
         summary = rationale or "Not applicable to this system."

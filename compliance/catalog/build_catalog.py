@@ -37,7 +37,15 @@ L1 = {"3.1.1", "3.1.2", "3.1.20", "3.1.22", "3.5.1", "3.5.2", "3.8.3", "3.10.1",
 HAS_COLLECTOR = {"3.1.1", "3.1.2", "3.3.1", "3.3.2", "3.3.8", "3.5.3",
                  "3.11.2", "3.13.8", "3.13.11", "3.14.1",
                  "3.12.1", "3.12.2", "3.12.3", "3.12.4",  # CA family via self_assessment
-                 "3.1.8", "3.1.11", "3.5.7"}              # identity_hardening
+                 "3.1.8", "3.1.11", "3.5.7",              # identity_hardening
+                 "3.13.10", "3.13.16"}                    # crypto_config (key mgmt, at rest)
+
+# Controls that are genuinely NOT satisfied yet (no policy/procedure or implementation
+# in place). They are honest gaps: scored not-met, appear in the POA&M, and deduct SPRS.
+NOT_IMPLEMENTED = {
+    "3.2.1", "3.2.2", "3.2.3",   # AT: no security awareness / training program yet
+    "3.9.1", "3.9.2",            # PS: no personnel screening / termination policy yet
+}
 
 # Implemented in the application but not YET covered by a collector. These are
 # attested (manual) rather than counted as gaps -- they are automation-roadmap
@@ -251,8 +259,11 @@ def build():
         fam = FAM_OF(cid)
         level = 1 if cid in L1 else 2
         weight = SPRS_WEIGHT.get(cid, weight)  # Annex A is authoritative for weights
+        # Genuinely unimplemented controls are honest gaps (scored not-met).
+        if cid in NOT_IMPLEMENTED:
+            ctype = "gap"
         # Controls with a collector are automated regardless of the row's default.
-        if cid in HAS_COLLECTOR:
+        elif cid in HAS_COLLECTOR:
             ctype = "automated"
         # Implemented-but-not-automated controls are attested, not gaps.
         elif cid in ROADMAP:

@@ -342,7 +342,7 @@
       "family_name": "Awareness and Training",
       "title": "Ensure managers and users are aware of security risks.",
       "sprs_weight": 5,
-      "type": "policy",
+      "type": "gap",
       "mappings": {
         "cmmc_l2": "AT.L2-3.2.1",
         "hipaa": "164.308(a)(5)(i)",
@@ -357,7 +357,7 @@
       "family_name": "Awareness and Training",
       "title": "Ensure personnel are trained to carry out security duties.",
       "sprs_weight": 5,
-      "type": "policy",
+      "type": "gap",
       "mappings": {
         "cmmc_l2": "AT.L2-3.2.2",
         "hipaa": "164.308(a)(5)(i)",
@@ -372,7 +372,7 @@
       "family_name": "Awareness and Training",
       "title": "Provide security awareness training on insider threat.",
       "sprs_weight": 1,
-      "type": "policy",
+      "type": "gap",
       "mappings": {
         "cmmc_l2": "AT.L2-3.2.3",
         "hipaa": null,
@@ -1088,7 +1088,7 @@
       "family_name": "Personnel Security",
       "title": "Screen individuals prior to authorizing access to CUI.",
       "sprs_weight": 3,
-      "type": "policy",
+      "type": "gap",
       "mappings": {
         "cmmc_l2": "PS.L2-3.9.1",
         "hipaa": "164.308(a)(3)(ii)(B)",
@@ -1103,7 +1103,7 @@
       "family_name": "Personnel Security",
       "title": "Protect CUI during and after personnel actions (termination/transfer).",
       "sprs_weight": 5,
-      "type": "policy",
+      "type": "gap",
       "mappings": {
         "cmmc_l2": "PS.L2-3.9.2",
         "hipaa": "164.308(a)(3)(ii)(C)",
@@ -1446,7 +1446,7 @@
       "family_name": "System and Communications Protection",
       "title": "Establish and manage cryptographic keys.",
       "sprs_weight": 1,
-      "type": "inherited",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "SC.L2-3.13.10",
         "hipaa": "164.312(a)(2)(iv)",
@@ -1535,7 +1535,7 @@
       "family_name": "System and Communications Protection",
       "title": "Protect the confidentiality of CUI at rest.",
       "sprs_weight": 1,
-      "type": "attested",
+      "type": "automated",
       "mappings": {
         "cmmc_l2": "SC.L2-3.13.16",
         "hipaa": "164.312(a)(2)(iv)",
