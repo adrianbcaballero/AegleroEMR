@@ -45,7 +45,7 @@
       "type": "attested",
       "mappings": {
         "cmmc_l2": "AC.L2-3.1.3",
-        "hipaa": "164.312(e)(1)",
+        "hipaa": null,
         "onc": null,
         "part2": null
       },
@@ -165,7 +165,7 @@
       "type": "automated",
       "mappings": {
         "cmmc_l2": "AC.L2-3.1.11",
-        "hipaa": null,
+        "hipaa": "164.312(a)(2)(iii)",
         "onc": "170.315(d)(5)",
         "part2": null
       },
@@ -986,7 +986,7 @@
       "type": "inherited",
       "mappings": {
         "cmmc_l2": "MP.L1-3.8.3",
-        "hipaa": "164.310(d)(2)(i)",
+        "hipaa": "164.310(d)(2)(i), 164.310(d)(2)(ii)",
         "onc": null,
         "part2": null
       },
@@ -1166,7 +1166,7 @@
       "type": "inherited",
       "mappings": {
         "cmmc_l2": "PE.L1-3.10.4",
-        "hipaa": "164.310(a)(2)(iii)",
+        "hipaa": "164.310(a)(1)",
         "onc": null,
         "part2": null
       },
@@ -1226,7 +1226,7 @@
       "type": "automated",
       "mappings": {
         "cmmc_l2": "RA.L2-3.11.2",
-        "hipaa": "164.308(a)(1)(ii)(A), 164.308(a)(8)",
+        "hipaa": "164.308(a)(1)(ii)(B), 164.308(a)(8)",
         "onc": null,
         "part2": null
       }
@@ -1465,7 +1465,7 @@
       "mappings": {
         "cmmc_l2": "SC.L2-3.13.11",
         "hipaa": "164.312(a)(2)(iv), 164.312(e)(2)(ii)",
-        "onc": "170.315(d)(7), 170.315(d)(12)",
+        "onc": "170.315(d)(12)",
         "part2": null
       }
     },
@@ -1539,7 +1539,7 @@
       "mappings": {
         "cmmc_l2": "SC.L2-3.13.16",
         "hipaa": "164.312(a)(2)(iv)",
-        "onc": "170.315(d)(7)",
+        "onc": null,
         "part2": null
       },
       "rationale": "RDS/S3/Secrets encrypted with KMS; collector pending."
@@ -1553,7 +1553,7 @@
       "type": "automated",
       "mappings": {
         "cmmc_l2": "SI.L1-3.14.1",
-        "hipaa": "164.308(a)(5)(ii)(B)",
+        "hipaa": "164.308(a)(1)(ii)(B)",
         "onc": null,
         "part2": null
       }

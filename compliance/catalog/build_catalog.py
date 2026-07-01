@@ -108,7 +108,7 @@ ROWS = [
     # ---- 3.1 Access Control ----
     ("3.1.1", "Limit system access to authorized users and processes.", 5, "automated", "164.312(a)(1)", "170.315(d)(1)", "2.16", ""),
     ("3.1.2", "Limit system access to permitted transactions and functions.", 5, "automated", "164.312(a)(1)", "170.315(d)(1)", "2.16", ""),
-    ("3.1.3", "Control the flow of CUI in accordance with approved authorizations.", 1, "automated", "164.312(e)(1)", None, None, "Enforced by VPC subnet tiers and security-group chaining; collector pending."),
+    ("3.1.3", "Control the flow of CUI in accordance with approved authorizations.", 1, "automated", None, None, None, "Enforced by VPC subnet tiers and security-group chaining; collector pending."),
     ("3.1.4", "Separate duties of individuals to reduce risk of malevolent activity.", 1, "manual", None, None, None, "RBAC role design separates duties; attested via policy."),
     ("3.1.5", "Employ least privilege, including for privileged accounts.", 3, "manual", "164.312(a)(1)", "170.315(d)(1)", None, "Least-privilege RBAC + care-team scoping; attested, automation pending."),
     ("3.1.6", "Use non-privileged accounts for nonsecurity functions.", 1, "manual", None, None, None, "Attested via policy."),
@@ -116,7 +116,7 @@ ROWS = [
     ("3.1.8", "Limit unsuccessful logon attempts.", 3, "manual", None, None, None, "Account lockout after 5 failed logons; automation pending."),
     ("3.1.9", "Provide privacy and security notices consistent with CUI rules.", 1, "manual", None, None, None, "Login banner / policy; attested."),
     ("3.1.10", "Use session lock with pattern-hiding after inactivity.", 3, "manual", None, "170.315(d)(5)", None, "15-minute idle session timeout; automation pending."),
-    ("3.1.11", "Terminate a user session after a defined condition.", 3, "manual", None, "170.315(d)(5)", None, "Server-side session revocation; automation pending."),
+    ("3.1.11", "Terminate a user session after a defined condition.", 3, "manual", "164.312(a)(2)(iii)", "170.315(d)(5)", None, "Server-side session revocation; automation pending."),
     ("3.1.12", "Monitor and control remote access sessions.", 5, "manual", "164.312(e)(1)", None, None, "All access via CloudFront/ALB; attested."),
     ("3.1.13", "Employ cryptographic mechanisms to protect remote access.", 5, "manual", "164.312(e)(2)(ii)", "170.315(d)(9)", None, "TLS 1.2+ everywhere; overlaps 3.13.8 (automated)."),
     ("3.1.14", "Route remote access via managed access control points.", 1, "manual", None, None, None, "CloudFront -> ALB managed entry; attested."),
@@ -185,7 +185,7 @@ ROWS = [
     # ---- 3.8 Media Protection ----
     ("3.8.1", "Protect system media containing CUI.", 3, "inherited", "164.310(d)(1)", None, None, "Storage media secured by AWS; data encrypted with KMS."),
     ("3.8.2", "Limit access to CUI on system media.", 5, "manual", "164.310(d)(1)", None, None, "S3/RDS access restricted via IAM/SG; attested."),
-    ("3.8.3", "Sanitize or destroy media before disposal or reuse.", 5, "inherited", "164.310(d)(2)(i)", None, None, "AWS media sanitization on decommission (NIST 800-88)."),
+    ("3.8.3", "Sanitize or destroy media before disposal or reuse.", 5, "inherited", "164.310(d)(2)(i), 164.310(d)(2)(ii)", None, None, "AWS media sanitization on decommission (NIST 800-88)."),
     ("3.8.4", "Mark media with necessary CUI markings.", 1, "na", None, None, None, "No physical media to mark."),
     ("3.8.5", "Control access to media during transport.", 3, "na", None, None, None, "No physical media transport."),
     ("3.8.6", "Use cryptographic protection for CUI on media during transport.", 1, "na", None, None, None, "No physical media transport; data encrypted at rest via KMS."),
@@ -201,13 +201,13 @@ ROWS = [
     ("3.10.1", "Limit physical access to systems and equipment.", 5, "inherited", "164.310(a)(1)", None, None, "AWS data-center physical security (SOC 2 / FedRAMP)."),
     ("3.10.2", "Protect and monitor the physical facility and infrastructure.", 5, "inherited", "164.310(a)(2)(ii)", None, None, "AWS facility protection and monitoring."),
     ("3.10.3", "Escort visitors and monitor visitor activity.", 1, "inherited", None, None, None, "AWS visitor controls at data centers."),
-    ("3.10.4", "Maintain audit logs of physical access.", 1, "inherited", "164.310(a)(2)(iii)", None, None, "AWS physical access logging."),
+    ("3.10.4", "Maintain audit logs of physical access.", 1, "inherited", "164.310(a)(1)", None, None, "AWS physical access logging."),
     ("3.10.5", "Control and manage physical access devices.", 1, "inherited", None, None, None, "AWS badge/key management."),
     ("3.10.6", "Enforce safeguarding measures for CUI at alternate work sites.", 1, "manual", None, None, None, "Remote-work security policy; see docs/policies/."),
 
     # ---- 3.11 Risk Assessment ----
     ("3.11.1", "Periodically assess risk to operations and assets.", 3, "manual", "164.308(a)(1)(ii)(A)", None, None, "HIPAA Risk Analysis; see docs/risk-analysis.md."),
-    ("3.11.2", "Scan for vulnerabilities periodically and when new ones arise.", 5, "automated", "164.308(a)(1)(ii)(A), 164.308(a)(8)", None, None, ""),
+    ("3.11.2", "Scan for vulnerabilities periodically and when new ones arise.", 5, "automated", "164.308(a)(1)(ii)(B), 164.308(a)(8)", None, None, ""),
     ("3.11.3", "Remediate vulnerabilities in accordance with risk assessments.", 1, "automated", None, None, None, "CI gates block HIGH/CRITICAL; overlaps 3.14.1."),
 
     # ---- 3.12 Security Assessment (satisfied by THIS engine) ----
@@ -227,15 +227,15 @@ ROWS = [
     ("3.13.8", "Use cryptography to protect CUI during transmission.", 5, "automated", "164.312(e)(1), 164.312(e)(2)(ii)", "170.315(d)(9)", None, ""),
     ("3.13.9", "Terminate network connections after inactivity.", 1, "manual", None, None, None, "Idle timeouts on sessions/keepalive; attested."),
     ("3.13.10", "Establish and manage cryptographic keys.", 1, "inherited", "164.312(a)(2)(iv)", None, None, "AWS KMS manages key lifecycle and rotation."),
-    ("3.13.11", "Employ FIPS-validated cryptography to protect CUI.", 3, "automated", "164.312(a)(2)(iv), 164.312(e)(2)(ii)", "170.315(d)(7), 170.315(d)(12)", None, ""),
+    ("3.13.11", "Employ FIPS-validated cryptography to protect CUI.", 3, "automated", "164.312(a)(2)(iv), 164.312(e)(2)(ii)", "170.315(d)(12)", None, ""),
     ("3.13.12", "Prohibit remote activation of collaborative computing devices.", 1, "na", None, None, None, "No cameras/microphones in scope."),
     ("3.13.13", "Control and monitor use of mobile code.", 1, "manual", None, None, None, "CSP/headers restrict client code; attested."),
     ("3.13.14", "Control and monitor use of Voice over IP.", 1, "na", None, None, None, "No VoIP in the SaaS boundary."),
     ("3.13.15", "Protect authenticity of communications sessions.", 5, "manual", None, "170.315(d)(9)", None, "TLS + httpOnly SameSite session cookies; attested."),
-    ("3.13.16", "Protect the confidentiality of CUI at rest.", 5, "automated", "164.312(a)(2)(iv)", "170.315(d)(7)", None, "RDS/S3/Secrets encrypted with KMS; collector pending."),
+    ("3.13.16", "Protect the confidentiality of CUI at rest.", 5, "automated", "164.312(a)(2)(iv)", None, None, "RDS/S3/Secrets encrypted with KMS; collector pending."),
 
     # ---- 3.14 System and Information Integrity ----
-    ("3.14.1", "Identify, report, and correct system flaws in a timely manner.", 5, "automated", "164.308(a)(5)(ii)(B)", None, None, ""),
+    ("3.14.1", "Identify, report, and correct system flaws in a timely manner.", 5, "automated", "164.308(a)(1)(ii)(B)", None, None, ""),
     ("3.14.2", "Provide protection from malicious code.", 5, "automated", "164.308(a)(5)(ii)(B)", None, None, "Trivy image/dep scanning in CI; collector pending."),
     ("3.14.3", "Monitor system security alerts and advisories; act on them.", 1, "manual", None, None, None, "pip-audit/Trivy advisories + GuardDuty; attested."),
     ("3.14.4", "Update malicious code protection mechanisms.", 1, "automated", None, None, None, "Trivy DB updated each CI run; collector pending."),
