@@ -1,6 +1,6 @@
 # System Security Plan (SSP): Aeglero EMR
 
-> **Auto-generated** by the Aeglero compliance engine on 2026-07-01T06:10:14+00:00. Do not hand-edit; regenerate from `status.json`.
+> **Auto-generated** by the Aeglero compliance engine on 2026-07-01T06:15:10+00:00. Do not hand-edit; regenerate from `status.json`.
 
 _Aeglero is a HIPAA-scoped healthcare system; its real regulatory obligation is HIPAA + 42 CFR Part 2. This document maps Aeglero's existing controls to NIST SP 800-171 Rev 2 to DEMONSTRATE continuous-compliance automation. Aeglero is not a federal CUI system and this is not an official assessment artifact._
 
@@ -40,7 +40,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 **Evidence.**
 - [`backend/services/audit_logger.py:29`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/services/audit_logger.py#L29): log_access() creates and stores an AuditLog row per event.
 
-**Provenance.** collected by `audit_chain` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `f44ccc756422e990…`
+**Provenance.** collected by `audit_chain` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `f44ccc756422e990…`
 
 ### 3.3.2: Ensure that the actions of individual system users can be uniquely traced to those users, so they can be held accountable for their actions.
 
@@ -55,7 +55,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 **Evidence.**
 - [`backend/services/audit_logger.py:9`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/services/audit_logger.py#L9): user_id is part of the audit record content and hash input.
 
-**Provenance.** collected by `audit_chain` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `3041c5b18177bd66…`
+**Provenance.** collected by `audit_chain` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `3041c5b18177bd66…`
 
 ### 3.3.8: Protect audit information and audit logging tools from unauthorized access, modification, and deletion.
 
@@ -72,7 +72,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 - [`backend/services/audit_logger.py:9`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/services/audit_logger.py#L9): Each entry references the previous entry's hash (per-tenant chain).
 - [`backend/routes/audit.py:246`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/routes/audit.py#L246): GET /api/audit/verify walks the chain and reports tampering.
 
-**Provenance.** collected by `audit_chain` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `7e1ab282570bf134…`
+**Provenance.** collected by `audit_chain` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `7e1ab282570bf134…`
 
 ### 3.1.1: Limit system access to authorized users, processes acting on behalf of authorized users, and devices (including other systems).
 
@@ -87,7 +87,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 **Evidence.**
 - [`backend/auth_middleware.py:47`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/auth_middleware.py#L47): require_auth() authenticates the session before the handler runs.
 
-**Provenance.** collected by `access_control` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `c052f0e419b984d4…`
+**Provenance.** collected by `access_control` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `c052f0e419b984d4…`
 
 ### 3.1.2: Limit system access to the types of transactions and functions that authorized users are permitted to execute.
 
@@ -103,7 +103,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 - [`backend/auth_middleware.py:71`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/auth_middleware.py#L71): require_auth(permission=...) enforces per-route permission.
 - [`backend/routes/patients.py:148`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/routes/patients.py#L148): _apply_rbac() limits patient rows to the caller's care teams.
 
-**Provenance.** collected by `access_control` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `e03f1d4c6bf4772c…`
+**Provenance.** collected by `access_control` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `e03f1d4c6bf4772c…`
 
 ### 3.5.3: Use multifactor authentication for local and network access to privileged accounts and for network access to non-privileged accounts.
 
@@ -119,7 +119,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 - [`backend/routes/mfa.py:4`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/routes/mfa.py#L4): pyotp TOTP setup/verify implements the second factor.
 - [`backend/routes/auth.py:71`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/backend/routes/auth.py#L71): Login enforces TOTP when tenant.mfa_required is enabled.
 
-**Provenance.** collected by `access_control` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `3f070c86830d53df…`
+**Provenance.** collected by `access_control` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `3f070c86830d53df…`
 
 ### 3.13.8: Implement cryptographic mechanisms to prevent unauthorized disclosure of CUI during transmission unless otherwise protected by alternative physical safeguards.
 
@@ -137,7 +137,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 - [`infra/cloudfront.tf:205`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/infra/cloudfront.tf#L205): CloudFront enforces a minimum TLS 1.2 viewer protocol version.
 - [`infra/cloudfront.tf:149`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/infra/cloudfront.tf#L149): CloudFront redirects all viewer traffic to HTTPS.
 
-**Provenance.** collected by `crypto_config` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `2136645358e39391…`
+**Provenance.** collected by `crypto_config` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `2136645358e39391…`
 
 ### 3.13.11: Employ FIPS-validated cryptography when used to protect the confidentiality of CUI.
 
@@ -154,7 +154,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 - [`infra/kms.tf:21`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/infra/kms.tf#L21): Automatic annual key rotation is enabled on the KMS keys.
 - [`infra/rds.tf:85`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/infra/rds.tf#L85): RDS storage is encrypted at rest using a customer-managed KMS key.
 
-**Provenance.** collected by `crypto_config` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `9ad52e2681f2b5bc…`
+**Provenance.** collected by `crypto_config` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `9ad52e2681f2b5bc…`
 
 ### 3.14.1: Identify, report, and correct system flaws in a timely manner.
 
@@ -170,7 +170,7 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 - [`.github/workflows/ci.yml`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/.github/workflows/ci.yml): 5 scanners configured: Bandit (SAST), pip-audit (Python deps), Trivy (containers/IaC/deps), Checkov (IaC compliance), pnpm audit (JS deps).
 - [`.github/workflows/ci.yml`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/.github/workflows/ci.yml): A HIGH/CRITICAL finding fails the build (exit-code 1), blocking merge until the flaw is corrected.
 
-**Provenance.** collected by `flaw_remediation` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `3f153b6b1e8f5801…`
+**Provenance.** collected by `flaw_remediation` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `3f153b6b1e8f5801…`
 
 ### 3.11.2: Scan for vulnerabilities in organizational systems and applications periodically and when new vulnerabilities affecting those systems and applications are identified.
 
@@ -186,5 +186,5 @@ AWS: CloudFront (edge) -> Application Load Balancer -> ECS Fargate (Flask/Python
 - [`.github/workflows/ci.yml`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/.github/workflows/ci.yml): Scan frequency defined by triggers: push, pull_request.
 - [`.github/workflows/ci.yml`](https://github.com/adrianbcaballero/AegleroEMR/blob/main/.github/workflows/ci.yml): POA&M: add a scheduled (cron) scan to satisfy 3.11.2[d] for newly identified vulnerabilities.
 
-**Provenance.** collected by `flaw_remediation` at 2026-07-01T06:10:14+00:00 · evidence SHA-256 `db60d2bac5b02da8…`
+**Provenance.** collected by `flaw_remediation` at 2026-07-01T06:15:10+00:00 · evidence SHA-256 `db60d2bac5b02da8…`
 
