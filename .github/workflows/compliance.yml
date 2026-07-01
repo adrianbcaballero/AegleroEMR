@@ -1,0 +1,63 @@
+name: Continuous Compliance
+
+# Re-assess Aeglero against NIST 800-171 on a schedule (and on relevant changes),
+# commit the refreshed evidence back to the repo so "continuous" is literally true
+# in the git history, and fail the run if posture drifts down or SPRS drops below
+# the gate.
+on:
+  schedule:
+    - cron: "17 7 * * *"        # daily at 07:17 UTC
+  workflow_dispatch:            # allow manual runs
+  push:
+    branches: [main]            # re-check when code/infra/CI change
+
+permissions:
+  contents: write               # needed to commit refreshed evidence
+
+concurrency:
+  group: compliance-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  assess:
+    name: Assess, refresh evidence, gate on drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # The committed status.json (from the last run) is our drift baseline.
+      - name: Snapshot previous status as baseline
+        run: cp compliance/output/status.json /tmp/prev-status.json || true
+
+      # Engine uses only the Python standard library - no pip install needed.
+      - name: Run compliance engine
+        run: python compliance/run.py
+
+      # Commit the refreshed artifacts. [skip ci] stops this bot commit from
+      # re-triggering the push-based workflows (no infinite loop).
+      - name: Commit refreshed evidence (if changed)
+        run: |
+          git config user.name  "compliance-bot"
+          git config user.email "compliance-bot@users.noreply.github.com"
+          git add compliance/output compliance/dashboard/data.js
+          if git diff --cached --quiet; then
+            echo "No evidence changes to commit."
+          else
+            git commit -m "chore(compliance): refresh evidence [skip ci]"
+            git push
+          fi
+
+      # Drift + SPRS gate. Fails the run (and thus alerts) if posture regressed
+      # or the score fell below COMPLIANCE_MIN_SPRS. Evidence is already committed
+      # above, so a regression is recorded even when this step fails.
+      - name: Drift detection + SPRS gate
+        env:
+          COMPLIANCE_MIN_SPRS: "90"
+        run: >
+          python compliance/check_drift.py
+          --old /tmp/prev-status.json
+          --new compliance/output/status.json
