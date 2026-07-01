@@ -113,6 +113,15 @@
     border: none; background: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  /* ---- export panel ---- */
+  .exports { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0 8px; }
+  .xbtn { font-family: var(--head); font-size: 12.5px; font-weight: 600; padding: 6px 12px;
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-flex;
+    align-items: center; gap: 6px; transition: all .12s; }
+  .xbtn:hover { border-color: var(--primary); color: var(--primary); }
+  .xbtn .xic { color: var(--muted); font-size: 11px; font-weight: 500; }
+  .xnote { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
   .aibanner { background: #e8eefc; border: 1px solid #cdd9f5; color: #2f4a86; border-radius: 10px;
     padding: 12px 16px; font-size: 13px; margin-bottom: 16px; }
   .airow { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; }
@@ -149,6 +158,16 @@
         <div class="panel stat" id="cov"></div>
         <div class="panel stat" id="poamstat"></div>
       </div>
+
+      <h2>Export</h2>
+      <div class="exports">
+        <a class="xbtn" href="exports/SSP.md" download>SSP <span class="xic">.md</span></a>
+        <a class="xbtn" href="exports/POAM.csv" download>POA&amp;M <span class="xic">.csv</span></a>
+        <a class="xbtn" href="exports/oscal-ssp.json" download>OSCAL SSP <span class="xic">.json</span></a>
+        <a class="xbtn" href="exports/oscal-poam.json" download>OSCAL POA&amp;M <span class="xic">.json</span></a>
+        <button class="xbtn" id="xcrosswalk" type="button">Crosswalk <span class="xic">.csv</span></button>
+      </div>
+      <div class="xnote">Auto-generated draft artifacts. The SSP follows NIST SP 800-18; the POA&amp;M uses the standard FedRAMP/DoD columns; OSCAL is the NIST machine-readable format. Crosswalk exports the framework selected below.</div>
 
       <h2>Control implementation</h2>
       <div class="fwbar" id="fwbar"></div>
@@ -295,6 +314,37 @@
 
   renderFwBar();
   renderControls();
+
+  // ---- export: crosswalk CSV for the currently selected framework ----
+  function csvCell(v) {
+    v = String(v == null ? '' : v);
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+  function downloadBlob(name, text, type) {
+    var blob = new Blob([text], { type: type || 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+  }
+  function exportCrosswalk() {
+    var fw = fwById(curFw);
+    var cross = fw.key !== 'nist' && fw.key !== 'cmmc';
+    var list = D.controls.filter(function (c) {
+      return cross ? !!(c.mappings && c.mappings[fw.mapKey]) : true;
+    });
+    var refCol = fw.key === 'nist' ? 'nist_reference' : fw.key + '_reference';
+    var header = ['nist_control', refCol, 'title', 'family', 'status', 'sprs_weight'];
+    var lines = [header.map(csvCell).join(',')];
+    list.forEach(function (c) {
+      var ref = fw.key === 'nist' ? c.id : ((c.mappings || {})[fw.mapKey] || c.id);
+      lines.push([c.id, ref, c.title, c.family, c.status, c.sprs_weight].map(csvCell).join(','));
+    });
+    downloadBlob('crosswalk-' + fw.key + '.csv', lines.join('\r\n') + '\r\n', 'text/csv');
+  }
+  var xcw = $('xcrosswalk');
+  if (xcw) xcw.onclick = exportCrosswalk;
 
   function ctrlRow(c, fw) {
     var f = c.finding;

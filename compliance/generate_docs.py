@@ -21,6 +21,7 @@ from __future__ import annotations
 import csv
 import json
 import re
+import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -37,6 +38,9 @@ POAM_CSV_PATH = OUTPUT_DIR / "POAM.csv"
 
 DASHBOARD_DIR = HERE / "dashboard"
 DASHBOARD_DATA_PATH = DASHBOARD_DIR / "data.js"
+# Downloadable artifacts staged next to the dashboard so the export panel can
+# serve them locally (file://) and from S3 once synced.
+EXPORTS_DIR = DASHBOARD_DIR / "exports"
 
 # Statuses that belong in the SSP (satisfied) vs the POA&M (open items).
 SSP_STATUSES = {"met", "partial", "inherited", "na", "manual", "attested", "policy"}
@@ -351,6 +355,11 @@ def generate(report: dict | None = None) -> list[Path]:
 
     # Standard machine-readable exports: OSCAL SSP + POA&M.
     oscal_paths = oscal.generate(report, profile, rows)
+
+    # Stage the downloadable bundle next to the dashboard for the export panel.
+    EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    for src in [SSP_PATH, POAM_PATH, POAM_CSV_PATH, *oscal_paths]:
+        shutil.copyfile(src, EXPORTS_DIR / src.name)
 
     # Emit the report as a JS global so dashboard/index.html can load it from
     # the local filesystem (file://) without a server or fetch/CORS issues.
