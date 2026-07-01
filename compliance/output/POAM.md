@@ -1,6 +1,6 @@
 # Plan of Action & Milestones (POA&M): Aeglero EMR
 
-> **Auto-generated** by the Aeglero compliance engine on 2026-07-01T08:35:06+00:00. Regenerate from `status.json`.
+> **Auto-generated** by the Aeglero compliance engine on 2026-07-01T08:47:48+00:00. Regenerate from `status.json`.
 
 - **Open items:** 1
 - **SPRS points at risk:** 5
