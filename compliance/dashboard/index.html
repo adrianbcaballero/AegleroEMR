@@ -108,6 +108,21 @@
   tr:last-child td { border-bottom: none; }
   .empty { color: var(--muted); padding: 22px; text-align: center; background: var(--card);
            border: 1px solid var(--border); border-radius: 12px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 0 0 22px; }
+  .tab { font-family: var(--head); font-size: 14px; font-weight: 600; padding: 10px 18px;
+    border: none; background: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .aibanner { background: #e8eefc; border: 1px solid #cdd9f5; color: #2f4a86; border-radius: 10px;
+    padding: 12px 16px; font-size: 13px; margin-bottom: 16px; }
+  .airow { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; }
+  .airow.disagree { border-color: var(--partial); background: #fffdf7; }
+  .aihead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .aicmp { color: var(--muted); font-size: 12.5px; }
+  .aiarrow { color: var(--gap); }
+  .aigaps { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+  .aigaps li { margin: 3px 0; }
+  .aiinj { color: var(--fail); font-weight: 600; font-size: 12.5px; margin-top: 6px; }
   .foot { margin-top: 30px; color: var(--gap); font-size: 12px; }
 </style>
 </head>
@@ -123,25 +138,35 @@
   <div class="wrap">
     <div class="scope" id="scope"></div>
 
-    <div class="hero">
-      <div class="panel ring-panel" id="ringpanel"></div>
-      <div class="panel stat" id="cov"></div>
-      <div class="panel stat" id="poamstat"></div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-view="controls">Controls</button>
+      <button class="tab" data-view="ai">AI Review</button>
     </div>
 
-    <h2>Control implementation</h2>
-    <div class="fwbar" id="fwbar"></div>
-    <div class="fwnote" id="fwnote"></div>
-    <div class="legend" id="legend"></div>
-    <div id="controls"></div>
+    <div id="view-controls">
+      <div class="hero">
+        <div class="panel ring-panel" id="ringpanel"></div>
+        <div class="panel stat" id="cov"></div>
+        <div class="panel stat" id="poamstat"></div>
+      </div>
 
-    <h2>Plan of Action &amp; Milestones (POA&amp;M)</h2>
-    <div id="poam"></div>
+      <h2>Control implementation</h2>
+      <div class="fwbar" id="fwbar"></div>
+      <div class="fwnote" id="fwnote"></div>
+      <div class="legend" id="legend"></div>
+      <div id="controls"></div>
+
+      <h2>Plan of Action &amp; Milestones (POA&amp;M)</h2>
+      <div id="poam"></div>
+    </div>
+
+    <div id="view-ai" style="display:none"></div>
 
     <div class="foot" id="foot"></div>
   </div>
 
 <script src="data.js"></script>
+<script src="ai_review.js"></script>
 <script>
 (function () {
   var D = window.COMPLIANCE_STATUS;
@@ -309,6 +334,77 @@
   }
 
   $('foot').textContent = 'Auto-generated from status.json by the Aeglero compliance engine. Full SSP and POA&M (with milestones) are in compliance/output/.';
+
+  // ---- AI Review tab -------------------------------------------------------
+  var titleById = {};
+  D.controls.forEach(function (c) { titleById[c.id] = c.title; });
+  var AIV = { satisfies: 'var(--met)', partial: 'var(--partial)', insufficient: 'var(--fail)' };
+  var AIT = { satisfies: '#e7f6ee', partial: '#fdf1de', insufficient: '#fbe9e9' };
+  var PASSING = ['met', 'inherited', 'attested', 'policy', 'na'];
+
+  function aiPill(v) {
+    return '<span class="status" style="background:' + (AIT[v] || '#eef1f4') + ';color:' +
+           (AIV[v] || 'var(--gap)') + '">' + esc(v || 'n/a') + '</span>';
+  }
+
+  function renderAiReview() {
+    var R = window.AI_REVIEW;
+    if (!R || !R.results || !R.results.length) {
+      $('view-ai').innerHTML = '<div class="empty">No AI review available. Run '
+        + '<code>python compliance/ai_review.py</code> to generate one.</div>';
+      return;
+    }
+    var rows = R.results.filter(function (r) { return r.review; });
+    // Disagreements first: engine passing but AI not "satisfies".
+    var disagree = function (r) {
+      return PASSING.indexOf(r.engine_status) >= 0 && r.review.suggested_verdict !== 'satisfies';
+    };
+    rows.sort(function (a, b) { return (disagree(b) ? 1 : 0) - (disagree(a) ? 1 : 0); });
+    var nDis = rows.filter(disagree).length;
+
+    var html = '<div class="aibanner"><b>AI-drafted, advisory, not authoritative.</b> An '
+      + 'independent model reviewed each control’s collected evidence. These are a second '
+      + 'opinion for human review; they do not change any status or the SPRS score. '
+      + (R.generated_at ? 'Generated ' + esc(R.generated_at) + '. ' : '')
+      + '<b>' + nDis + '</b> of ' + rows.length + ' reviewed controls flagged for attention.</div>';
+
+    rows.forEach(function (r) {
+      var rev = r.review, dis = disagree(r);
+      html += '<div class="airow' + (dis ? ' disagree' : '') + '">';
+      html += '<div class="aihead"><span class="cid">' + esc(r.control_id) + '</span>'
+        + '<span class="ctitle">' + esc(titleById[r.control_id] || '') + '</span></div>';
+      html += '<div class="aicmp" style="margin-top:6px">engine: ' + pill(r.engine_status)
+        + ' <span class="aiarrow">&rarr;</span> AI: ' + aiPill(rev.suggested_verdict)
+        + ' <span style="color:var(--muted)">(confidence ' + esc(rev.confidence) + ')</span></div>';
+      if (rev.injection_detected) {
+        html += '<div class="aiinj">⚠ prompt-injection attempt detected in this control’s evidence'
+          + (rev.injection_note ? ': ' + esc(rev.injection_note) : '') + '</div>';
+      }
+      if (rev.gaps && rev.gaps.length) {
+        html += '<ul class="aigaps">';
+        rev.gaps.forEach(function (g) { html += '<li>' + esc(g) + '</li>'; });
+        html += '</ul>';
+      }
+      var p = r.provenance || {};
+      html += '<div class="prov" style="margin-top:8px">reviewed by ' + esc(p.model || '')
+        + ' at ' + esc(p.reviewed_at || '') + ' · evidence '
+        + esc((p.evidence_sha256 || '').slice(0, 16)) + '…</div>';
+      html += '</div>';
+    });
+    $('view-ai').innerHTML = html;
+  }
+
+  var aiRendered = false;
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
+    tab.onclick = function () {
+      Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var v = tab.getAttribute('data-view');
+      $('view-controls').style.display = v === 'controls' ? '' : 'none';
+      $('view-ai').style.display = v === 'ai' ? '' : 'none';
+      if (v === 'ai' && !aiRendered) { renderAiReview(); aiRendered = true; }
+    };
+  });
 })();
 </script>
 </body>
