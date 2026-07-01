@@ -23,7 +23,14 @@ jobs:
     name: Assess, refresh evidence, gate on drift
     runs-on: ubuntu-latest
     steps:
+      # Check out with the admin PAT (COMPLIANCE_BOT_TOKEN) so the evidence-refresh
+      # push can bypass the branch-protection ruleset on main. The default
+      # GITHUB_TOKEN is not an admin and would be blocked. Falls back to the default
+      # token if the secret isn't set (push will then be skipped by the step below).
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.COMPLIANCE_BOT_TOKEN || github.token }}
+          persist-credentials: true
 
       - uses: actions/setup-python@v5
         with:

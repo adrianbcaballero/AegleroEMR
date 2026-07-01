@@ -49,6 +49,12 @@ Thumbs.db
 dbdata/
 *.pid
 
+# ===== Local tool binaries====
+/trivy.zip
+/trivy.exe
+/checkov
+/*.zip
+
 # ===== Private internal scripts / demo data =====
 backend/scripts/_private/
 
