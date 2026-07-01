@@ -67,16 +67,27 @@
   .legend { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; margin-bottom: 14px; }
   .dot { display: inline-block; width: 9px; height: 9px; border-radius: 99px; margin-right: 6px; vertical-align: middle; }
   .famhead { font-size: 12px; color: var(--muted); font-weight: 600; margin: 16px 0 8px; }
+  .fwbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 2px 0 10px; }
+  .fwbtn { font-family: var(--head); font-size: 12.5px; font-weight: 600; padding: 6px 14px;
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    border-radius: 99px; cursor: pointer; transition: all .12s; }
+  .fwbtn:hover { border-color: var(--primary); color: var(--primary); }
+  .fwbtn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .fwnote { color: var(--muted); font-size: 12.5px; margin-bottom: 12px; }
+  .fwnote b { color: var(--text); }
 
   .ctrl { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; }
   .ctrl + .ctrl { margin-top: 0; }
-  .ctrl summary { list-style: none; cursor: pointer; padding: 13px 16px; display: flex; align-items: center; gap: 12px; }
+  .ctrl summary { list-style: none; cursor: pointer; padding: 13px 16px; display: grid;
+    grid-template-columns: 122px 92px 1fr auto; align-items: center; gap: 12px; }
+  .ctrl summary .status { justify-self: start; }
   .ctrl summary::-webkit-details-marker { display: none; }
   .ctrl[open] summary { border-bottom: 1px solid var(--border2); }
   .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
             padding: 3px 10px 3px 8px; border-radius: 99px; white-space: nowrap; }
   .status .ic { font-size: 12px; line-height: 1; }
-  .cid { font-family: var(--head); font-variant-numeric: tabular-nums; font-weight: 700; min-width: 56px; font-size: 14px; }
+  .cid { font-family: var(--head); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 14px; line-height: 1.25; }
+  .cid .cid2 { color: var(--muted); font-weight: 500; font-size: 12px; }
   .ctitle { flex: 1; font-size: 14px; }
   .cwt { color: var(--muted); font-size: 12px; white-space: nowrap; }
   .body { padding: 14px 16px 18px; color: var(--muted); font-size: 13.5px; }
@@ -119,6 +130,8 @@
     </div>
 
     <h2>Control implementation</h2>
+    <div class="fwbar" id="fwbar"></div>
+    <div class="fwnote" id="fwnote"></div>
     <div class="legend" id="legend"></div>
     <div id="controls"></div>
 
@@ -173,8 +186,8 @@
 
   $('topright').innerHTML = '<b>' + esc(D.framework) + '</b><br>generated ' + esc(D.generated_at);
   $('scope').textContent =
-    'Demonstration: Aeglero is a HIPAA-scoped healthcare system; its controls are mapped to NIST SP 800-171 ' +
-    'to demonstrate continuous-compliance automation.';
+    'Demonstration: Aeglero is a HIPAA-scoped healthcare system, assessed against NIST SP 800-171 and ' +
+    'crosswalked to HIPAA, ONC, CMMC, and 42 CFR Part 2 to demonstrate continuous-compliance automation.';
 
   // ---- SPRS ring ----
   var pct = s.sprs_score / s.sprs_base;
@@ -194,7 +207,7 @@
     '<div class="label">Automated evidence coverage</div>' +
     '<div class="big">' + s.automated_coverage_pct + '<small>%</small></div>' +
     '<div class="track"><i style="width:' + Math.max(3, s.automated_coverage_pct) + '%;background:var(--met)"></i></div>' +
-    '<div class="note">' + s.controls_with_evidence + ' of ' + s.controls_applicable + ' applicable controls proven by a collector</div>';
+    '<div class="note">' + s.controls_with_evidence + ' of ' + s.controls_applicable + ' applicable controls verified automatically (by a collector); the rest are attested, policy-backed, or inherited</div>';
 
   // ---- POA&M stat ----
   var atRisk = gaps.reduce(function (a, c) { return a + (c.sprs_weight || 0); }, 0);
@@ -208,21 +221,62 @@
     return D.controls.some(function (c) { return c.status === k; }); })
     .map(function (k) { return '<span><i class="dot" style="background:' + COLOR[k] + '"></i>' + LABEL[k] + '</span>'; }).join('');
 
-  // ---- controls grouped by family ----
-  var fams = {}; D.controls.forEach(function (c) { (fams[c.family] = fams[c.family] || []).push(c); });
+  // ---- framework switcher + controls ----
+  var FRAMEWORKS = [
+    { key: 'nist', label: 'NIST 800-171', mapKey: null },
+    { key: 'hipaa', label: 'HIPAA', mapKey: 'hipaa' },
+    { key: 'cmmc', label: 'CMMC L2', mapKey: 'cmmc_l2' },
+    { key: 'onc', label: 'ONC Health IT', mapKey: 'onc' },
+    { key: 'part2', label: '42 CFR Part 2', mapKey: 'part2' }
+  ];
   var ord = { met: 0, inherited: 0, attested: 0, policy: 0, manual: 0, partial: 1, 'not-met': 2, error: 3, 'not-collected': 4, na: 5 };
-  var html = '';
-  Object.keys(fams).forEach(function (fam) {
-    var list = fams[fam].slice().sort(function (a, b) { return ord[a.status] - ord[b.status]; });
-    html += '<div class="famhead">' + esc(fam) + ': ' + esc(list[0].family_name || '') + '</div>';
-    list.forEach(function (c) { html += ctrlRow(c); });
-  });
-  $('controls').innerHTML = html;
+  var SATISFIED = ['met', 'inherited', 'attested', 'policy', 'na'];
+  var curFw = 'nist';
+  var fwById = function (k) { return FRAMEWORKS.filter(function (f) { return f.key === k; })[0]; };
 
-  function ctrlRow(c) {
+  function renderFwBar() {
+    $('fwbar').innerHTML = FRAMEWORKS.map(function (f) {
+      return '<button class="fwbtn' + (f.key === curFw ? ' active' : '') + '" data-fw="' + f.key + '">' + esc(f.label) + '</button>';
+    }).join('');
+    Array.prototype.forEach.call($('fwbar').querySelectorAll('.fwbtn'), function (btn) {
+      btn.onclick = function () { curFw = btn.getAttribute('data-fw'); renderFwBar(); renderControls(); };
+    });
+  }
+
+  function renderControls() {
+    var fw = fwById(curFw);
+    var cross = fw.key !== 'nist' && fw.key !== 'cmmc';
+    var list = D.controls.filter(function (c) {
+      return cross ? !!(c.mappings && c.mappings[fw.mapKey]) : true;
+    });
+    var sat = list.filter(function (c) { return SATISFIED.indexOf(c.status) >= 0; }).length;
+    $('fwnote').innerHTML = fw.key === 'nist'
+      ? 'All ' + D.controls.length + ' NIST SP 800-171 Rev 2 controls. Pick a framework to view the same evidence mapped across it.'
+      : fw.key === 'cmmc'
+        ? 'All ' + list.length + ' controls, shown by CMMC Level 2 practice ID, with the matching NIST 800-171 control in gray.'
+        : '<b>' + list.length + '</b> controls map to ' + esc(fw.label) + ' &middot; <b>' + sat + '</b> satisfied. Each row shows the ' + esc(fw.label) + ' reference, with the matching NIST 800-171 control in gray.';
+
+    var fams = {}; list.forEach(function (c) { (fams[c.family] = fams[c.family] || []).push(c); });
+    var html = '';
+    Object.keys(fams).forEach(function (fam) {
+      var arr = fams[fam].slice().sort(function (a, b) { return ord[a.status] - ord[b.status]; });
+      html += '<div class="famhead">' + esc(fam) + ': ' + esc(arr[0].family_name || '') + '</div>';
+      arr.forEach(function (c) { html += ctrlRow(c, fw); });
+    });
+    $('controls').innerHTML = html || '<div class="empty">No controls map to this framework.</div>';
+  }
+
+  renderFwBar();
+  renderControls();
+
+  function ctrlRow(c, fw) {
     var f = c.finding;
+    var mapped = fw.key === 'nist' ? c.id : ((c.mappings || {})[fw.mapKey] || c.id);
+    var cid = fw.key === 'nist'
+      ? esc(c.id)
+      : esc(mapped) + ' <span class="cid2">&middot; ' + esc(c.id) + '</span>';
     var head = '<summary>' + pill(c.status) +
-      '<span class="cid">' + esc(c.id) + '</span>' +
+      '<span class="cid">' + cid + '</span>' +
       '<span class="ctitle">' + esc(c.title) + '</span>' +
       '<span class="cwt">wt ' + esc(c.sprs_weight) + '</span></summary>';
     var b = '<div class="body">';
