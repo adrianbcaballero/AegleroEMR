@@ -4,3 +4,8 @@
 # boto3 is required only for the OPT-IN live AWS collector (aws_live.py, TEST
 # method), which runs when COMPLIANCE_ENABLE_AWS=1 (the live GitHub Actions job).
 boto3>=1.34
+
+# anthropic is required only for the OPT-IN AI evidence reviewer (ai_review.py).
+# The reviewer is advisory and off by default; --dry-run needs no package or key.
+# See compliance/docs/ai-evidence-review.md for the provider governance constraints.
+anthropic>=0.40
