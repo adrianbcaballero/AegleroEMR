@@ -44,19 +44,17 @@ jobs:
       - name: Run compliance engine
         run: python compliance/run.py
 
-      # Commit the refreshed artifacts. [skip ci] stops this bot commit from
-      # re-triggering the push-based workflows (no infinite loop).
-      - name: Commit refreshed evidence (if changed)
-        run: |
-          git config user.name  "compliance-bot"
-          git config user.email "compliance-bot@users.noreply.github.com"
-          git add compliance/output compliance/dashboard/data.js
-          if git diff --cached --quiet; then
-            echo "No evidence changes to commit."
-          else
-            git commit -m "chore(compliance): refresh evidence [skip ci]"
-            git push
-          fi
+      # The evidence files are generated (gitignored), so we upload them as a
+      # downloadable artifact instead of committing them. This avoids merge
+      # conflicts between feature branches and the daily run.
+      - name: Upload refreshed evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-evidence
+          path: |
+            compliance/output/
+            compliance/dashboard/data.js
+          if-no-files-found: error
 
       # Drift + SPRS gate. Fails the run (and thus alerts) if posture regressed
       # or the score fell below COMPLIANCE_MIN_SPRS. Evidence is already committed
